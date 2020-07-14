@@ -2405,7 +2405,7 @@ static void loop()
 int main(void)
 {
     // Start the millisecond timer - it enables timer interrupts
-    setup_millis();
+    millisInit();
 
     // Initialise the input/output module
     ioConfigure();
@@ -2417,11 +2417,11 @@ int main(void)
     catInit();
 
     // Set up morse and set the speed and keyer mode as read from NVRAM
-    morseConfigure();
+    morseInit();
     morseSetWpm( nvramReadWpm() );
     morseSetKeyerMode( nvramReadMorseKeyerMode() );
 
-    displayConfigure();
+    displayInit();
    
     // Initialise the oscillator chip
 	bOscInit = oscInit();
