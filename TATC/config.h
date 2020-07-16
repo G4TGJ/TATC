@@ -212,4 +212,10 @@ typedef uint8_t bool;
 // The frequency below which the relay is switched on
 #define RELAY_ON_FREQ      4000000
 
+// Time for debouncing a switch (ms)
+#define DEBOUNCE_TIME   100
+
+// Time for a key press to be a long press (ms)
+#define LONG_PRESS_TIME 250
+
 #endif /* CONFIG_H_ */

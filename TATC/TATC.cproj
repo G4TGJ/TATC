@@ -178,6 +178,14 @@
       <SubType>compile</SubType>
       <Link>osc.h</Link>
     </Compile>
+    <Compile Include="..\..\TARL\rotary.c">
+      <SubType>compile</SubType>
+      <Link>rotary.c</Link>
+    </Compile>
+    <Compile Include="..\..\TARL\rotary.h">
+      <SubType>compile</SubType>
+      <Link>rotary.h</Link>
+    </Compile>
     <Compile Include="..\..\TARL\serial.c">
       <SubType>compile</SubType>
       <Link>serial.c</Link>
