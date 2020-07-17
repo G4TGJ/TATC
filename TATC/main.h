@@ -15,7 +15,7 @@ extern uint32_t rxFreq;
 #define VFO_A 0
 #define VFO_B 1
 
-void     keyDown( bool bDown );
+// CAT driver
 void     setVFOFrequency( uint8_t vfo, uint32_t freq );
 uint32_t getVFOFreq( uint8_t vfo );
 uint32_t getCurrentVFOFreq();
@@ -34,10 +34,13 @@ void     setVFOSplit( bool bSplit );
 bool     getTransmitting();
 void     vfoSwap();
 void     vfoEqual();
-void     setCurrentVFOOffset( uint16_t rit );
+void     setCurrentVFOOffset( int16_t rit );
 void     setCWReverse( bool bCWReverse );
 
+// Morse driver
 // Display a character on the screen as sent or received (if implemented)
 void     displayMorse( char *text );
+
+void     keyDown( bool bDown );
 
 #endif /* MAIN_H_ */

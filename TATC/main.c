@@ -1869,7 +1869,7 @@ static void adjustVFO( uint8_t vfo, int16_t freqChange, int16_t offsetChange )
 }
 
 // Set the RIT - called from CAT control
-void setCurrentVFOOffset( uint16_t rit )
+void setCurrentVFOOffset( int16_t rit )
 {
     // Set the RIT by changing the offset.
     adjustVFO( currentVFO, 0, rit-vfoState[currentVFO].offset);
@@ -2135,7 +2135,7 @@ int main(void)
     millisInit();
 
     // Initialise the input/output module
-    ioConfigure();
+    ioInit();
 
     // Initialise the NVRAM/EEPROM before other modules as it contains values needed for other setup
     nvramInit();

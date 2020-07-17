@@ -123,7 +123,6 @@ bool ioReadRotarySW()
 }
 #endif
 
-// Set the morse output high
 // Functions to read morse paddle inputs
 bool ioReadDotPaddle()
 {
@@ -135,6 +134,7 @@ bool ioReadDashPaddle()
     return !(MORSE_PADDLE_DASH_PIN_REG & (1<<MORSE_PADDLE_DASH_PIN));
 }
 
+// Set the morse output high
 void ioWriteMorseOutputHigh()
 {
     MORSE_OUTPUT_PORT_REG |= (1<<MORSE_OUTPUT_PIN);
@@ -182,7 +182,7 @@ void ioWriteBandRelayOff()
     RELAY_OUTPUT_PORT_REG &= ~(1<<RELAY_OUTPUT_PIN);
 }
 
-void ioConfigure()
+void ioInit()
 {
 	// Initialise morse and LED outputs
     MORSE_OUTPUT_DDR_REG |= (1<<MORSE_OUTPUT_PIN);

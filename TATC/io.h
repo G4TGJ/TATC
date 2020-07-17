@@ -10,17 +10,14 @@
 
 #include <inttypes.h>
 
-// Configure all IO ports
-void ioConfigure();
+// Initialise all IO ports
+void ioInit();
 
 // Read the morse dot and dash paddles
 bool ioReadDotPaddle();
 bool ioReadDashPaddle();
 
 // Read the rotary control and switch
-bool ioReadRotaryA();
-bool ioReadRotaryB();
-bool ioReadRotarySW();
 void ioReadRotary( bool *pbA, bool *pbB, bool *pbSw );
 
 // Set the morse output high or low
