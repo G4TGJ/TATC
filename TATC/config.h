@@ -218,4 +218,15 @@ typedef uint8_t bool;
 // Time for a key press to be a long press (ms)
 #define LONG_PRESS_TIME 250
 
+// Buffer lengths for the serial port
+// Length should be a power of 2 for efficiency
+#define SERIAL_RX_BUF_LEN 32
+#define SERIAL_TX_BUF_LEN 64
+
+// Time for debouncing a switch (ms)
+#define ROTARY_BUTTON_DEBOUNCE_TIME   100
+
+// Time for a key press to be a long press (ms)
+#define ROTARY_LONG_PRESS_TIME 250
+
 #endif /* CONFIG_H_ */

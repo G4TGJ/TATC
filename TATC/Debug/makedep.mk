@@ -18,6 +18,10 @@
 
 ..\..\TARL\morse.c
 
+..\..\TARL\pushbutton.c
+
+..\..\TARL\rotary.c
+
 ..\..\TARL\serial.c
 
 ..\..\TARL\si5351a.c
