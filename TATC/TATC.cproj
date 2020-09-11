@@ -178,6 +178,14 @@
       <SubType>compile</SubType>
       <Link>osc.h</Link>
     </Compile>
+    <Compile Include="..\..\TARL\pushbutton.c">
+      <SubType>compile</SubType>
+      <Link>pushbutton.c</Link>
+    </Compile>
+    <Compile Include="..\..\TARL\pushbutton.h">
+      <SubType>compile</SubType>
+      <Link>pushbutton.h</Link>
+    </Compile>
     <Compile Include="..\..\TARL\rotary.c">
       <SubType>compile</SubType>
       <Link>rotary.c</Link>
