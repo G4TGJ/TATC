@@ -1,0 +1,3 @@
+- name: Build
+  service: app
+  command: ./build.sh
