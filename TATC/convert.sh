@@ -86,7 +86,7 @@ else
     echo "AVR_GCC_VERSION: ${AVR_GCC_VERSION}"
     
     sed -i 's/cmd.exe/sh/g' ${TARGET_MAKEFILE}
-    sed -i "s/4.9.2/${AVR_GCC_VERSION}/g" ${TARGET_MAKEFILE}
+    sed -i "s/5.4.0/${AVR_GCC_VERSION}/g" ${TARGET_MAKEFILE}
     sed -i 's/C:\\Program Files (x86)\\Atmel\\Studio\\7.0\\toolchain\\avr8\\avr8-gnu-toolchain\\bin\\avr-/\/usr\/bin\/avr-/g' ${TARGET_MAKEFILE}
     sed -i 's/.exe//g' ${TARGET_MAKEFILE}
     echo ''
