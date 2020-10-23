@@ -22,6 +22,148 @@
 // easy to change the hardware e.g. we have the option to
 // connect several inputs to a single ADC pin
 
+
+#ifdef VPORTC
+
+// ATtiny 1-series
+
+// Configure all the I/O we need
+void ioInit()
+{
+    /* Set all pins to low power mode */
+
+    for (uint8_t i = 0; i < 8; i++) {
+        *((uint8_t *)&PORTA + 0x10 + i) |= 1 << PORT_PULLUPEN_bp;
+    }
+
+    for (uint8_t i = 0; i < 8; i++) {
+        *((uint8_t *)&PORTB + 0x10 + i) |= 1 << PORT_PULLUPEN_bp;
+    }
+
+    for (uint8_t i = 0; i < 8; i++) {
+        *((uint8_t *)&PORTC + 0x10 + i) |= 1 << PORT_PULLUPEN_bp;
+    }
+
+    // Set the input pins to inputs with pull ups
+    ROTARY_ENCODER_SW_DIR_REG &= ~(1 << ROTARY_ENCODER_SW_PIN);
+    ROTARY_ENCODER_SW_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
+    ROTARY_ENCODER_A_DIR_REG &= ~(1 << ROTARY_ENCODER_A_PIN);
+    ROTARY_ENCODER_A_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
+    ROTARY_ENCODER_B_DIR_REG &= ~(1 << ROTARY_ENCODER_B_PIN);
+    ROTARY_ENCODER_B_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
+
+    LEFT_DIR_REG &= ~(1 << LEFT_PIN);
+    LEFT_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
+
+    RIGHT_DIR_REG &= ~(1 << RIGHT_PIN);
+    RIGHT_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
+
+    MORSE_PADDLE_DOT_DIR_REG &= ~(1 << MORSE_PADDLE_DOT_PIN);
+    MORSE_PADDLE_DOT_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
+    MORSE_PADDLE_DASH_DIR_REG &= ~(1 << MORSE_PADDLE_DASH_PIN);
+    MORSE_PADDLE_DASH_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
+
+    // Set the output pins to outputs and turn off
+    RELAY_OUTPUT_DIR_REG |= (1 << RELAY_OUTPUT_PIN);
+    RELAY_OUTPUT_OUT_REG &= ~(1 << RELAY_OUTPUT_PIN);
+
+    MORSE_OUTPUT_DIR_REG |= (1 << MORSE_OUTPUT_PIN);
+    MORSE_OUTPUT_OUT_REG &= ~(1 << MORSE_OUTPUT_PIN);
+
+    TX_OUTPUT_DIR_REG |= (1 << TX_OUTPUT_PIN);
+    TX_OUTPUT_OUT_REG |= (1 << TX_OUTPUT_PIN);
+
+    // Set up timer TCB1 to produce sidetone on PA3
+    // We will get the clock from TCA0 (the millisecond timer) which we
+    // divided down enough so that we can get an audible frequency
+#define PERIOD (F_CPU/CLOCK_DIV/CW_FREQUENCY)
+    TCB1.CCMPL = PERIOD;
+    TCB1.CCMPH = PERIOD/2;
+    TCB1.CTRLB = TCB_CNTMODE2_bm | TCB_CNTMODE1_bm | TCB_CNTMODE0_bm;
+    TCB1.CTRLA = TCB_CLKSEL1_bm | TCB_ENABLE_bm;
+    PORTA.PIN3CTRL &= PORT_PULLUPEN_bm;
+
+    /* Insert nop for synchronization*/
+    _NOP();
+}
+
+void ioReadRotary( bool *pbA, bool *pbB, bool *pbSw )
+{
+    *pbA  = !(ROTARY_ENCODER_A_IN_REG & (1 << ROTARY_ENCODER_A_PIN));
+    *pbB  = !(ROTARY_ENCODER_B_IN_REG & (1 << ROTARY_ENCODER_B_PIN));
+    *pbSw = !(ROTARY_ENCODER_SW_IN_REG & (1 << ROTARY_ENCODER_SW_PIN));
+}
+
+bool readLeft()
+{
+    return !(LEFT_IN_REG & (1 << LEFT_PIN));
+}
+
+bool readRight()
+{
+    return !(RIGHT_IN_REG & (1 << RIGHT_PIN));
+}
+
+// Read the morse dot and dash paddles
+bool ioReadDotPaddle()
+{
+    return !(MORSE_PADDLE_DOT_IN_REG & (1 << MORSE_PADDLE_DOT_PIN));
+}
+
+bool ioReadDashPaddle()
+{
+    return !(MORSE_PADDLE_DASH_IN_REG & (1 << MORSE_PADDLE_DASH_PIN));
+}
+
+// Set the morse output high or low
+void ioWriteMorseOutputHigh()
+{
+    MORSE_OUTPUT_OUT_REG |= (1<<MORSE_OUTPUT_PIN);
+}
+
+void ioWriteMorseOutputLow()
+{
+    MORSE_OUTPUT_OUT_REG &= ~(1<<MORSE_OUTPUT_PIN);
+}
+
+// Set the TX output high or low
+void ioWriteTXOutputHigh()
+{
+    TX_OUTPUT_OUT_REG |= (1<<TX_OUTPUT_PIN);
+}
+
+void ioWriteTXOutputLow()
+{
+    TX_OUTPUT_OUT_REG &= ~(1<<TX_OUTPUT_PIN);
+}
+
+// Switch the sidetone output on or off
+void ioWriteSidetoneOn()
+{
+    // Enable the waveform output
+    TCB1.CTRLB |= TCB_CCMPEN_bm;
+}
+
+void ioWriteSidetoneOff()
+{
+    // Disable the waveform output
+    TCB1.CTRLB &= ~TCB_CCMPEN_bm;
+}
+
+
+// Switch the band relay output on or off
+void ioWriteBandRelayOn()
+{
+    RELAY_OUTPUT_OUT_REG |= (1<<RELAY_OUTPUT_PIN);
+}
+
+void ioWriteBandRelayOff()
+{
+    RELAY_OUTPUT_OUT_REG &= ~(1<<RELAY_OUTPUT_PIN);
+}
+
+#else
+
 #ifdef ROTARY_ANALOGUE
 
 // We are using 2 ADCs.
@@ -229,3 +371,4 @@ void ioInit()
     _NOP();
 }
 
+#endif

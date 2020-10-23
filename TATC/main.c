@@ -151,7 +151,7 @@ static enum eCurrentMode
 } currentMode = modeVFO;
 
 // Band frequencies
-#define NUM_BANDS 11
+#define NUM_BANDS 13
 static const struct  
 {
     char     *bandName;     // Text for the menu
@@ -165,9 +165,11 @@ band[NUM_BANDS] =
 {
     { "160m",    1810000,  1999999,  1836000, TX_ENABLED_160M, RELAY_STATE_160M },
     { "80m",     3500000,  3799999,  3560000, TX_ENABLED_80M,  RELAY_STATE_80M },
+    { "RWM",     4996000,  4996000,  4996000, false,           RELAY_STATE_60M },
     { "60m UK",  5258500,  5263999,  5262000, TX_ENABLED_60M,  RELAY_STATE_60M },
     { "60m EU",  5354000,  5357999,  5355000, TX_ENABLED_60M,  RELAY_STATE_60M },
     { "40m",     7000000,  7199999,  7030000, TX_ENABLED_40M,  RELAY_STATE_40M },
+    { "RWM",     9996000,  9996000,  9996000, false,           RELAY_STATE_30M },
     { "30m",    10100000, 10150000, 10116000, TX_ENABLED_30M,  RELAY_STATE_30M },
     { "20m",    14000000, 14349999, 14060000, TX_ENABLED_20M,  RELAY_STATE_20M },
     { "17m",    18068000, 18167999, 18086000, TX_ENABLED_17M,  RELAY_STATE_17M },
@@ -212,7 +214,7 @@ enum eVFOMode
 #define VFO_DIGIT_NORMAL    9
 
 // In fast mode, if the dial is spun the rate speeds up
-#define VFO_SPEED_UP_DIFF   50  // If dial clicks are no more than this ms apart then speed up
+#define VFO_SPEED_UP_DIFF  150  // If dial clicks are no more than this ms apart then speed up
 #define VFO_SPEED_UP_FACTOR 10  // Multiply the rate by this
 
 // Maintain transmit and receive frequencies for two VFOs
@@ -400,6 +402,10 @@ static void Transmit( bool bTX )
         }
         else
         {
+            // Delay the same as before transmit so that the dot
+            // or dash is not truncated
+            delay(txDelay);
+
             // Set the morse output low
             ioWriteMorseOutputLow();
             delay(txDelay);
@@ -411,9 +417,6 @@ static void Transmit( bool bTX )
             enableTXClock( false );
         }
         bTransmitting = bTX;
-
-        // Update the display to show the actual transmit/receive frequency
-        update_display();
     }
 }
 
@@ -475,6 +478,10 @@ void keyDown( bool bDown )
     }
     else
     {
+        // Delay the same as before key down so that dot or dash
+        // is not truncated
+        delay(muteDelay);
+
         // Turn off the PA and TX oscillator
         Transmit( false );
 
@@ -2131,6 +2138,11 @@ static void loop()
 
 int main(void)
 {
+    // Disable the clock prescaler so that it runs at 20MHz
+    // Have to enable access first
+    CCP = CCP_IOREG_gc;
+    CLKCTRL.MCLKCTRLB = 0;
+
     // Start the millisecond timer - it enables timer interrupts
     millisInit();
 

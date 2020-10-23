@@ -21,57 +21,108 @@ typedef uint8_t bool;
 
 #define ULONG_MAX 0xFFFFFFFF
 
-// Position of default band in the frequency table defined in main.c
-// The band is stored in NVRAM so this is only used on first power up
-#define DEFAULT_BAND 3
 
-// By default we are not using CW-Reverse mode
-#define DEFAULT_CWREVERSE false
+#ifdef VPORTC
+
+// ATtiny 1-series
+
+// Processor definitions
+// CPU clock speed
+#define F_CPU 20000000UL
+
+// Clock divider
+// This is used by the millisecond clock on TCA0
+// This also feeds clock TCB1 which is used to generate sidetone
+// and so needs to be divided down enough to get an audible frequency
+#define CLOCK_DIV 256
+
+// I/O definitions
+
+#define RIGHT_DIR_REG      VPORTC.DIR
+#define RIGHT_IN_REG       VPORTC.IN
+#define RIGHT_PIN          0
+#define RIGHT_PIN_CTRL     PORTC.PIN0CTRL
+
+#define LEFT_DIR_REG      VPORTB.DIR
+#define LEFT_IN_REG       VPORTB.IN
+#define LEFT_PIN          2
+#define LEFT_PIN_CTRL     PORTB.PIN2CTRL
+
+#define ROTARY_ENCODER_A_DIR_REG    VPORTC.DIR
+#define ROTARY_ENCODER_A_IN_REG     VPORTC.IN
+#define ROTARY_ENCODER_A_PIN        2
+#define ROTARY_ENCODER_A_PIN_CTRL   PORTC.PIN2CTRL
+
+#define ROTARY_ENCODER_B_DIR_REG    VPORTC.DIR
+#define ROTARY_ENCODER_B_IN_REG     VPORTC.IN
+#define ROTARY_ENCODER_B_PIN        3
+#define ROTARY_ENCODER_B_PIN_CTRL   PORTC.PIN3CTRL
+
+#define ROTARY_ENCODER_SW_DIR_REG   VPORTC.DIR
+#define ROTARY_ENCODER_SW_IN_REG    VPORTC.IN
+#define ROTARY_ENCODER_SW_PIN       1
+#define ROTARY_ENCODER_SW_PIN_CTRL  PORTC.PIN1CTRL
+
+#define MORSE_PADDLE_DASH_DIR_REG    VPORTA.DIR
+#define MORSE_PADDLE_DASH_IN_REG     VPORTA.IN
+#define MORSE_PADDLE_DASH_PIN        4
+#define MORSE_PADDLE_DASH_PIN_CTRL   PORTA.PIN4CTRL
+
+#define MORSE_PADDLE_DOT_DIR_REG    VPORTA.DIR
+#define MORSE_PADDLE_DOT_IN_REG     VPORTA.IN
+#define MORSE_PADDLE_DOT_PIN        5
+#define MORSE_PADDLE_DOT_PIN_CTRL   PORTA.PIN5CTRL
+
+#define MORSE_OUTPUT_DIR_REG     VPORTA.DIR
+#define MORSE_OUTPUT_OUT_REG     VPORTA.OUT
+#define MORSE_OUTPUT_PIN         6
+
+#define TX_OUTPUT_DIR_REG     VPORTA.DIR
+#define TX_OUTPUT_OUT_REG     VPORTA.OUT
+#define TX_OUTPUT_PIN         7
+
+#define RELAY_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_OUTPUT_PIN         5
+
+// Oscillator chip definitions
+// I2C address
+#define SI5351A_I2C_ADDRESS 0x60
+
+// The si5351a default crystal frequency and load capacitance
+#define DEFAULT_XTAL_FREQ	25000000UL
+#define SI_XTAL_LOAD_CAP SI_XTAL_LOAD_8PF
+
+#define I2C_CLOCK_RATE 100000
+
+// Define to use the alternative pins (PA1, PA2) instead
+// of the standard pins (PB2,PB3)
+#define SERIAL_ALTERNATIVE_PINS
+#ifdef SERIAL_ALTERNATIVE_PINS
+#define SERIAL_DIR_REG  VPORTA.DIR
+#define SERIAL_TXD_PIN  1
+#define SERIAL_RXD_PIN  2
+#else
+#define SERIAL_DIR_REG  VPORTB.DIR
+#define SERIAL_TXD_PIN  2
+#define SERIAL_RXD_PIN  3
+#endif
+
+// Using I2C LCD
+#define LCD_I2C
+
+// Address of the LCD display
+#define LCD_I2C_ADDRESS 0x27
+
+#else
 
 // Processor definitions
 // CPU clock speed
 #define F_CPU 16000000UL
 
-// Serial port definitions
-#define SERIAL_BAUD 57600
-
-// Time between scans of the CAT interface
-#define CAT_CHARACTER_DELAY 10
-
-// Oscillator chip definitions
-// I2C address
-#define SI5351A_I2C_ADDRESS 0x62
-
-// Transmit and receive clocks. Receive uses 2 clocks for quadrature.
-#define NUM_CLOCKS 3
-#define RX_CLOCK_A 0
-#define RX_CLOCK_B 1
-#define TX_CLOCK   2
-
-// The minimum and maximum crystal frequencies in the setting menu
-// Have to allow for adjusting above or below actual valid crystal range
-#define MIN_XTAL_FREQUENCY 24000000
-#define MAX_XTAL_FREQUENCY 28000000
-
 // The si5351a default crystal frequency and load capacitance
 #define DEFAULT_XTAL_FREQ	27000000
 #define SI_XTAL_LOAD_CAP SI_XTAL_LOAD_10PF
-
-// Morse definitions
-// Frequency of CW tone
-#define CW_FREQUENCY 700
-
-// The receive frequency needs to be offset from the dial frequency
-// to receive with the correct tone.
-#define RX_OFFSET CW_FREQUENCY
-
-// Default, minimum and maximum morse speed in wpm
-#define DEFAULT_MORSE_WPM 18
-#define MIN_MORSE_WPM 5
-#define MAX_MORSE_WPM 40
-
-// Default morse keyer mode
-#define DEFAULT_KEYER_MODE 0
 
 // Morse paddle inputs
 #define MORSE_PADDLE_DOT_PORT_REG   PORTB
@@ -150,6 +201,52 @@ typedef uint8_t bool;
 #define LCD_DATA_PORT_3  PORTD
 #define LCD_DATA_DDR_3  DDRD
 #define LCD_DATA_PIN_3  PD2
+
+#endif
+
+// Position of default band in the frequency table defined in main.c
+// The band is stored in NVRAM so this is only used on first power up
+#define DEFAULT_BAND 3
+
+// By default we are not using CW-Reverse mode
+#define DEFAULT_CWREVERSE false
+
+// Serial port definitions
+#define SERIAL_BAUD 57600
+
+// Time between scans of the CAT interface
+#define CAT_CHARACTER_DELAY 10
+
+// Oscillator chip definitions
+// I2C address
+#define SI5351A_I2C_ADDRESS 0x60
+
+// Transmit and receive clocks. Receive uses 2 clocks for quadrature.
+#define NUM_CLOCKS 3
+#define RX_CLOCK_A 0
+#define RX_CLOCK_B 1
+#define TX_CLOCK   2
+
+// The minimum and maximum crystal frequencies in the setting menu
+// Have to allow for adjusting above or below actual valid crystal range
+#define MIN_XTAL_FREQUENCY 24000000
+#define MAX_XTAL_FREQUENCY 28000000
+
+// Morse definitions
+// Frequency of CW tone
+#define CW_FREQUENCY 700
+
+// The receive frequency needs to be offset from the dial frequency
+// to receive with the correct tone.
+#define RX_OFFSET CW_FREQUENCY
+
+// Default, minimum and maximum morse speed in wpm
+#define DEFAULT_MORSE_WPM 18
+#define MIN_MORSE_WPM 5
+#define MAX_MORSE_WPM 40
+
+// Default morse keyer mode
+#define DEFAULT_KEYER_MODE 0
 
 // How often to update the display
 #define DISPLAY_INTERVAL 50
