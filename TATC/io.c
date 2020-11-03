@@ -94,12 +94,13 @@ void ioReadRotary( bool *pbA, bool *pbB, bool *pbSw )
     *pbSw = !(ROTARY_ENCODER_SW_IN_REG & (1 << ROTARY_ENCODER_SW_PIN));
 }
 
-bool readLeft()
+// Read the left and right pushbuttons
+bool ioReadLeftButton()
 {
     return !(LEFT_IN_REG & (1 << LEFT_PIN));
 }
 
-bool readRight()
+bool ioReadRightButton()
 {
     return !(RIGHT_IN_REG & (1 << RIGHT_PIN));
 }

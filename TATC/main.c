@@ -23,28 +23,29 @@
 #include "morse.h"
 #include "cat.h"
 #include "rotary.h"
+#include "pushbutton.h"
 
 // Menu functions
-static bool menuVFOBand( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuVFOMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuBreakIn( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuTestRXMute( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuSidetone( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuRXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuUnmuteDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuMuteDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuTXDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuTXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuTXOut( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
-static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress );
+static bool menuVFOBand( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuVFOMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuBreakIn( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuTestRXMute( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuSidetone( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuRXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuUnmuteDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuMuteDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuTXDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuTXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuTXOut( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 
 // Menu structure arrays
 
 struct sMenuItem
 {
     char *text;
-    bool (*func)(bool, bool, bool, bool);
+    bool (*func)(bool, bool, bool, bool, bool, bool, bool, bool);
 };
 
 #define NUM_VFO_MENUS 3
@@ -205,13 +206,30 @@ enum eVFOMode
     vfoNumModes // Num of VFO modes. Must be the last entry.
 };
 
-// Amount to change the VFO in fast and normal modes
-#define VFO_CHANGE_FAST     100
-#define VFO_CHANGE_NORMAL   10
+// The cursor position along with its corresponding frequency change
+struct sCursorPos
+{
+    uint8_t x, y;
+    uint32_t freqChange;
+};
 
-// Cursor digit position for fast and normal VFO modes
-#define VFO_DIGIT_FAST      8
-#define VFO_DIGIT_NORMAL    9
+// Mark the end of the cursor transitions
+#define CURSOR_TRANSITION_END 0xFF
+
+// The cursor transitions for the VFO
+static const struct sCursorPos vfoCursorTransition[] =
+{
+    { 9, 1, 10 },
+    { 8, 1, 100 },
+    { 6, 1, 1000 },
+    { CURSOR_TRANSITION_END, CURSOR_TRANSITION_END, CURSOR_TRANSITION_END }
+};
+
+// When at this index in the table the VFO can be sped up if the dial is spun quickly
+#define CURSOR_FAST_INDEX 2
+
+// Index for the current cursor position
+static uint8_t cursorIndex;
 
 // In fast mode, if the dial is spun the rate speeds up
 #define VFO_SPEED_UP_DIFF  150  // If dial clicks are no more than this ms apart then speed up
@@ -519,7 +537,6 @@ static void update_cursor()
 {
     // Default to the top frequency line
     uint8_t line = FREQ_LINE;
-    uint8_t col;
 
     // Only update the cursor if in VFO mode
     if( currentMode == modeVFO || currentMode == modeFastVFO )
@@ -534,17 +551,7 @@ static void update_cursor()
             }
         }
 
-        // Cursor is on the digit that the vfo is changing
-        if( currentMode == modeFastVFO )
-        {
-            col = VFO_DIGIT_FAST;
-        }
-        else
-        {
-            col = VFO_DIGIT_NORMAL;
-        }
-
-        displayCursor( col, line, cursorUnderline );
+        displayCursor( vfoCursorTransition[cursorIndex].x, line, cursorUnderline );
     }
 }
 
@@ -1012,7 +1019,7 @@ static void leaveMenu()
 }
 
 // Handle the rotary control while in the menu
-static void rotaryMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static void rotaryMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // If in a menu item then pass control to its function
     if( bInMenuItem )
@@ -1020,7 +1027,7 @@ static void rotaryMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
         // We'll let the menu function have first go at dealing with
         // any presses etc. Only if it hasn't used it will we do
         // anything
-        if( !menu[currentMenu].subMenu[currentSubMenu].func( bCW, bCCW, bShortPress, bLongPress ) )
+        if( !menu[currentMenu].subMenu[currentSubMenu].func( bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight ) )
         {
             // A long press takes us out of the menu item
             if( bLongPress )
@@ -1118,7 +1125,7 @@ static void rotaryMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
                 bEnteredMenuItem = true;
 
                 // A short press on a menu item calls its function
-                menu[currentMenu].subMenu[currentSubMenu].func( false, false, false, false );
+                menu[currentMenu].subMenu[currentSubMenu].func( false, false, false, false, false, false, false, false );
             }
             else if( bLongPress )
             {
@@ -1133,7 +1140,7 @@ static void rotaryMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
 }
 
 // Handle the rotary control while in the quick menu
-static void rotaryQuickMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static void rotaryQuickMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     if( bCW )
     {
@@ -1176,7 +1183,7 @@ static void rotaryQuickMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPr
 }
 
 // Handle the menu for the VFO band
-static bool menuVFOBand( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuVFOBand( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Set to true if we have used the presses etc
     bool bUsed = false;
@@ -1247,7 +1254,7 @@ void setCWReverse( bool bCWReverse )
     setFrequencies();
 }
 
-static bool menuVFOMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuVFOMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Get the CW mode from NVRAM
     bool bCWReverse = nvramReadCWReverse();
@@ -1279,7 +1286,7 @@ static bool menuVFOMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress 
     return bUsed;
 }
 
-static bool menuBreakIn( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuBreakIn( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Set to true if we have used the presses etc
     bool bUsed = false;
@@ -1302,7 +1309,7 @@ static bool menuBreakIn( bool bCW, bool bCCW, bool bShortPress, bool bLongPress 
     return bUsed;
 }
 
-static bool menuSidetone( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuSidetone( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Set to true if we have used the presses etc
     bool bUsed = false;
@@ -1325,7 +1332,7 @@ static bool menuSidetone( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
     return bUsed;
 }
 
-static bool menuTestRXMute( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuTestRXMute( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Set to true if we have used the presses etc
     bool bUsed = false;
@@ -1351,7 +1358,7 @@ static bool menuTestRXMute( bool bCW, bool bCCW, bool bShortPress, bool bLongPre
 }
 
 
-static bool menuRXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuRXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Set to true if we have used the presses etc
     bool bUsed = false;
@@ -1376,7 +1383,7 @@ static bool menuRXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress 
     return bUsed;
 }
 
-static bool menuTXDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuTXDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Set to true if we have used the presses etc
     bool bUsed = false;
@@ -1417,7 +1424,7 @@ static bool menuTXDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress 
     return bUsed;
 }
 
-static bool menuTXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuTXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Set to true if we have used the presses etc
     bool bUsed = false;
@@ -1440,7 +1447,7 @@ static bool menuTXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress 
     return bUsed;
 }
 
-static bool menuTXOut( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuTXOut( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Set to true if we have used the presses etc
     bool bUsed = false;
@@ -1463,7 +1470,7 @@ static bool menuTXOut( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
     return bUsed;
 }
 
-static bool menuUnmuteDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuUnmuteDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Set to true if we have used the presses etc
     bool bUsed = false;
@@ -1505,7 +1512,7 @@ static bool menuUnmuteDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPr
 }
 
 
-static bool menuMuteDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuMuteDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Set to true if we have used the presses etc
     bool bUsed = false;
@@ -1548,7 +1555,7 @@ static bool menuMuteDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPres
 
 // Menu for changing the crystal frequency
 // Each digit can be changed individually
-static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // When the menu is entered we are changing the first changeable digit of the
     // crystal frequency i.e. MHz. This is digit 7.
@@ -1696,7 +1703,7 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
     return bUsed;
 }
 
-static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // Set to true if we have used the presses etc
     bool bUsed = false;
@@ -1883,7 +1890,7 @@ void setCurrentVFOOffset( int16_t rit )
 }
 
 // Handle the rotary control while in the VFO mode
-static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // How much to change frequency by
     int16_t change;
@@ -1896,15 +1903,7 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
     prevTime = currentTime;
     
     // Set the amount each click changes VFO by
-    if( currentMode == modeFastVFO )
-    {
-        // In fast mode this can be sped up further
-        change = VFO_CHANGE_FAST;
-    }
-    else
-    {
-        change = VFO_CHANGE_NORMAL;
-    }
+    change = vfoCursorTransition[cursorIndex].freqChange;
 
     // Rotation is a change up or down in frequency
     if( bCW )
@@ -1923,7 +1922,7 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
     }
 
     // In fast VFO mode we speed up the change if the dial is spun
-    if( currentMode == modeFastVFO && (diffTime < VFO_SPEED_UP_DIFF) )
+    if( cursorIndex == CURSOR_FAST_INDEX && (diffTime < VFO_SPEED_UP_DIFF) )
     {
         change *= VFO_SPEED_UP_FACTOR;
     }
@@ -1943,17 +1942,13 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
                 bVFOFirstLine = true;
             }
         }
-        // In simplex mode a short press toggles between regular and fast
-        // VFO modes
+        // In simplex mode a short press moves to the next digit
         else if( vfoState[currentVFO].mode == vfoSimplex )
         {
-            if( currentMode == modeFastVFO )
+            cursorIndex++;
+            if( vfoCursorTransition[cursorIndex].x == CURSOR_TRANSITION_END )
             {
-                currentMode = modeVFO;
-            }
-            else
-            {
-                currentMode = modeFastVFO;
+                cursorIndex = 0;
             }
         }
         else
@@ -1965,10 +1960,15 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
         // Display the cursor in the correct place
         update_cursor();
     }
-    else if( bLongPress )
+    else if( bLongPress || bShortPressLeft )
     {
         // A long press takes us to the quick menu
         enterQuickMenu();
+    }
+    else if( bShortPressRight )
+    {
+        // A right press takes us to the menu
+        enterMenu();
     }
     else
     {
@@ -2001,7 +2001,7 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
 }
 
 // Handle the rotary control while in the wpm setting mode
-static void rotaryWpm( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
+static void rotaryWpm( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // When switching into straight key mode want to remember current wpm
     // so that we switch back to that instead of the default
@@ -2088,35 +2088,49 @@ static void rotaryWpm( bool bCW, bool bCCW, bool bShortPress, bool bLongPress )
 
 // See if the rotary control has been touched and handle its movement
 // This will update either the VFO or the wpm or the menu
+// Also handles the left and right buttons
 static void handleRotary()
 {
     bool bShortPress;
     bool bLongPress;
     bool bCW;
     bool bCCW;
+    bool bShortPressLeft;
+    bool bLongPressLeft;
+    bool bShortPressRight;
+    bool bLongPressRight;
 
-    // Read the rotary state and call the handler if anything has happened
+    // Button debounce states
+    static struct sDebounceState debounceStateLeft, debounceStateRight;
+
+    // Debounce the pushbuttons
+    debouncePushbutton( ioReadLeftButton(),  &bShortPressLeft,  &bLongPressLeft,  DEBOUNCE_TIME, LONG_PRESS_TIME, &debounceStateLeft);
+    debouncePushbutton( ioReadRightButton(), &bShortPressRight, &bLongPressRight, DEBOUNCE_TIME, LONG_PRESS_TIME, &debounceStateRight);
+
+    // Read the rotary state and the left and right buttons
     readRotary(&bCW, &bCCW, &bShortPress, &bLongPress);
-    if( bCW || bCCW || bShortPress || bLongPress )
+
+    // Call the handler if anything has happened
+    if( bCW || bCCW || bShortPress || bLongPress || bShortPressLeft || bLongPressLeft || bShortPressRight || bLongPressRight )
     {
         switch( currentMode )
         {
             case modeMenu:
-                rotaryMenu(bCW, bCCW, bShortPress, bLongPress);
+                rotaryMenu(bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight);
                 break;
 
             case modeQuickMenu:
-                rotaryQuickMenu(bCW, bCCW, bShortPress, bLongPress);
+                rotaryQuickMenu(bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight);
                 break;
 
             case modeWpm:
-                rotaryWpm(bCW, bCCW, bShortPress, bLongPress);
+                rotaryWpm(bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight);
                 break;
 
             default:
             case modeVFO:
             case modeFastVFO:
-                rotaryVFO(bCW, bCCW, bShortPress, bLongPress);
+                rotaryVFO(bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight);
                 break;
         }
     }

@@ -20,6 +20,10 @@ bool ioReadDashPaddle();
 // Read the rotary control and switch
 void ioReadRotary( bool *pbA, bool *pbB, bool *pbSw );
 
+// Read the left and right pushbuttons
+bool ioReadLeftButton();
+bool ioReadRightButton();
+
 // Set the morse output high or low
 void ioWriteMorseOutputHigh();
 void ioWriteMorseOutputLow();
