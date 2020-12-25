@@ -81,9 +81,20 @@ typedef uint8_t bool;
 #define TX_OUTPUT_OUT_REG     VPORTA.OUT
 #define TX_OUTPUT_PIN         7
 
-#define RELAY_OUTPUT_DIR_REG     VPORTB.DIR
-#define RELAY_OUTPUT_OUT_REG     VPORTB.OUT
-#define RELAY_OUTPUT_PIN         5
+// There are 3 band relays
+#define NUM_RELAYS 3
+
+#define RELAY_0_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_0_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_0_OUTPUT_PIN         3
+
+#define RELAY_1_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_1_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_1_OUTPUT_PIN         4
+
+#define RELAY_2_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_2_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_2_OUTPUT_PIN         5
 
 // Oscillator chip definitions
 // I2C address
@@ -273,41 +284,35 @@ typedef uint8_t bool;
 // For each band, what state should the LPF/PA relay be in
 // and is TX allowed on the band
 
-// Currently, the relay state is not used
-// See RELAY_ON_FREQ below.
-
-#define RELAY_STATE_160M   1
+#define RELAY_STATE_160M   0
 #define TX_ENABLED_160M    false
 
-#define RELAY_STATE_80M    1
+#define RELAY_STATE_80M    0
 #define TX_ENABLED_80M     true
 
-#define RELAY_STATE_60M    0
+#define RELAY_STATE_60M    1
 #define TX_ENABLED_60M     false
 
-#define RELAY_STATE_40M    0
-#define TX_ENABLED_40M     false
+#define RELAY_STATE_40M    1
+#define TX_ENABLED_40M     true
 
-#define RELAY_STATE_30M    0
+#define RELAY_STATE_30M    2
 #define TX_ENABLED_30M     false
 
-#define RELAY_STATE_20M    0
+#define RELAY_STATE_20M    2
 #define TX_ENABLED_20M     true
 
-#define RELAY_STATE_17M    0
+#define RELAY_STATE_17M    2
 #define TX_ENABLED_17M     false
 
-#define RELAY_STATE_15M    0
+#define RELAY_STATE_15M    2
 #define TX_ENABLED_15M     false
 
-#define RELAY_STATE_12M    0
+#define RELAY_STATE_12M    2
 #define TX_ENABLED_12M     false
 
-#define RELAY_STATE_10M    0
+#define RELAY_STATE_10M    2
 #define TX_ENABLED_10M     false
-
-// The frequency below which the relay is switched on
-#define RELAY_ON_FREQ      4000000
 
 // Time for debouncing a switch (ms)
 #define DEBOUNCE_TIME   100

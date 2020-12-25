@@ -64,8 +64,14 @@ void ioInit()
     MORSE_PADDLE_DASH_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
 
     // Set the output pins to outputs and turn off
-    RELAY_OUTPUT_DIR_REG |= (1 << RELAY_OUTPUT_PIN);
-    RELAY_OUTPUT_OUT_REG &= ~(1 << RELAY_OUTPUT_PIN);
+    RELAY_0_OUTPUT_DIR_REG |= (1 << RELAY_0_OUTPUT_PIN);
+    RELAY_0_OUTPUT_OUT_REG &= ~(1 << RELAY_0_OUTPUT_PIN);
+
+    RELAY_1_OUTPUT_DIR_REG |= (1 << RELAY_1_OUTPUT_PIN);
+    RELAY_1_OUTPUT_OUT_REG &= ~(1 << RELAY_1_OUTPUT_PIN);
+
+    RELAY_2_OUTPUT_DIR_REG |= (1 << RELAY_2_OUTPUT_PIN);
+    RELAY_2_OUTPUT_OUT_REG &= ~(1 << RELAY_2_OUTPUT_PIN);
 
     MORSE_OUTPUT_DIR_REG |= (1 << MORSE_OUTPUT_PIN);
     MORSE_OUTPUT_OUT_REG &= ~(1 << MORSE_OUTPUT_PIN);
@@ -151,16 +157,33 @@ void ioWriteSidetoneOff()
     TCB1.CTRLB &= ~TCB_CCMPEN_bm;
 }
 
+// Map between relay number and the output register and pin
+static const struct
+{
+    register8_t *outReg;
+    uint8_t      pinVal;
+}
+relayMap[NUM_RELAYS] =
+{
+    { &RELAY_0_OUTPUT_OUT_REG, (1 << RELAY_0_OUTPUT_PIN) },
+    { &RELAY_1_OUTPUT_OUT_REG, (1 << RELAY_1_OUTPUT_PIN) },
+    { &RELAY_2_OUTPUT_OUT_REG, (1 << RELAY_2_OUTPUT_PIN) },
+};
 
 // Switch the band relay output on or off
-void ioWriteBandRelayOn()
+void ioWriteBandRelay( uint8_t relay, bool bOn )
 {
-    RELAY_OUTPUT_OUT_REG |= (1<<RELAY_OUTPUT_PIN);
-}
-
-void ioWriteBandRelayOff()
-{
-    RELAY_OUTPUT_OUT_REG &= ~(1<<RELAY_OUTPUT_PIN);
+    if( relay < NUM_RELAYS )
+    {
+        if( bOn )
+        {
+            *relayMap[relay].outReg |= relayMap[relay].pinVal;
+        }
+        else
+        {
+            *relayMap[relay].outReg &= ~relayMap[relay].pinVal;
+        }
+    }
 }
 
 #else

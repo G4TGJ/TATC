@@ -160,7 +160,7 @@ static const struct
     uint32_t  maxFreq;      // Max band frequency
     uint32_t  defaultFreq;  // Where to start on this band e.g. QRP calling
     bool      bTXEnabled;   // True if TX enabled on this band
-    uint8_t   relayState;   // What state to put the relays in on this band NOT CURRENTLY USED
+    uint8_t   relayState;   // What state to put the relays in on this band
 }
 band[NUM_BANDS] =
 {
@@ -181,6 +181,9 @@ band[NUM_BANDS] =
 
 // Current band - initialised from NVRAM
 static uint8_t currentBand;
+
+// Current relay state - always set from the frequency
+static uint8_t currentRelay;
 
 // Is the VFO on the first or second frequency line?
 static bool bVFOFirstLine = true;
@@ -352,32 +355,37 @@ void setBandFromFrequency( uint32_t freq )
         // See what band it is in
         for( int b = 0 ; b < NUM_BANDS ; b++ )
         {
-            // If the frequency is in the band then set it
-            // If not in a band then leave the band unchanged
-            // Won't be allowed to transmit out of band so it doesn't matter
-            if( (freq >= band[b].minFreq) && (freq <= band[b].maxFreq) )
+            if( freq <= band[b].maxFreq )
             {
-                currentBand = b;
+                // Whether or not we are in band this must be the relay state we need
+                // to choose the LPF
+                currentRelay = band[b].relayState;
 
-                // Store the band in the NVRAM
-                nvramWriteBand( b );
+                // If the frequency is in the band then set it
+                // If not in a band then leave the band unchanged
+                // Won't be allowed to transmit out of band so it doesn't matter
+                if( freq >= band[b].minFreq )
+                {
+                    currentBand = b;
+
+                    // Store the band in the NVRAM
+                    nvramWriteBand( b );
+                }
+
+                // We can stop looking whether out of band or not
                 break;
-            }            
+            }
         }
     }
 }
 
-// Sets the LPF relay for the given frequency
-void setRelay( uint32_t freq )
+// Sets the relay for the current frequency
+static void setRelay()
 {
-    // Set the relay for this frequency
-    if( freq < RELAY_ON_FREQ )
+    // Set each relay to off except for the current relay
+    for( int i = 0 ; i < NUM_RELAYS ; i++ )
     {
-        ioWriteBandRelayOn();
-    }
-    else
-    {
-        ioWriteBandRelayOff();
+        ioWriteBandRelay( i, currentRelay == i );
     }
 }
 
@@ -409,9 +417,6 @@ static void Transmit( bool bTX )
                 delay(txDelay);
             }
 
-            // Set the relay for the TX frequency
-            setRelay( getTXFreq() );
-
             // Set the morse output high
             if( bTXOutEnabled )
             {
@@ -427,9 +432,6 @@ static void Transmit( bool bTX )
             // Set the morse output low
             ioWriteMorseOutputLow();
             delay(txDelay);
-
-            // Set the relay for the RX frequency
-            setRelay( getRXFreq() );
 
             // Turn off the TX clock
             enableTXClock( false );
@@ -704,8 +706,8 @@ void setRXFrequency( uint32_t freq )
     oscSetFrequency( RX_CLOCK_A, oscFreq, 0 );
     oscSetFrequency( RX_CLOCK_B, oscFreq, bCWReverse ? 1 : -1 );
 
-    // Set the relay for this receive frequency
-    setRelay( getRXFreq() );
+    // Set the relay
+    setRelay();
 }
 
 // Set the TX and RX frequencies

@@ -36,9 +36,8 @@ void ioWriteTXOutputHigh();
 void ioWriteSidetoneOn();
 void ioWriteSidetoneOff();
 
-// Switch the band relay output on or off
-void ioWriteBandRelayOn();
-void ioWriteBandRelayOff();
+// Switch a band relay output on or off
+void ioWriteBandRelay( uint8_t relay, bool bOn );
 
 
 #endif //IO_H
