@@ -794,32 +794,24 @@ static void enterMenu()
     menuDisplayText();
 }
 
-// Leave the quick menu
-// bSelected - If true an item was selected so go to VFO mode
-//           - If false go to wpm mode
-static void leaveQuickMenu( bool bSelected )
+// Go back to VFO mode
+static void enterVFOMode()
 {
+    // Go to VFO mode
+    currentMode = modeVFO;
+
+    // Next time we enter the menu start not in a menu item
+    bEnteredMenuItem = false;
+
+    // Display the cursor in the right place
+    update_cursor();
+
     // Clear the second line as no longer in the menu
     displaySplitLine( 0, FREQ_LINE + 1 );
     displayText( FREQ_LINE+1, "", true);
 
     // Update the display with the correct split for the current VFO mode
     update_display();
-
-    // Are we leaving the menu because we selected something?
-    if( bSelected )
-    {
-        // Yes, so go to VFO mode
-        currentMode = modeVFO;
-
-        // Display the cursor in the right place
-        update_cursor();
-    }
-    else
-    {
-        // No, so go to wpm mode
-        enterWpm();
-    }
 }
 
 // Swap the VFOs - called either from the quick menu or CAT control
@@ -836,7 +828,7 @@ void vfoSwap()
 static void quickMenuSwap()
 {
     vfoSwap();
-    leaveQuickMenu( true );
+    enterVFOMode();
 }
 
 // Set the other VFO to the current VFO - called either from the quick menu or CAT control
@@ -855,7 +847,7 @@ void vfoEqual()
 static void quickMenuEqual()
 {
     vfoEqual();
-    leaveQuickMenu( true );
+    enterVFOMode();
 }
 
 // Set RIT on or off - called from quick menu or CAT control
@@ -899,7 +891,7 @@ static void quickMenuRIT()
             break;
     }
 
-    leaveQuickMenu( true );
+    enterVFOMode();
 }
 
 // Quick menu item XIT selected
@@ -929,7 +921,7 @@ static void quickMenuXIT()
         // Update the frequencies and display
         setFrequencies();
 
-        leaveQuickMenu( true );
+        enterVFOMode();
     }
 }
 
@@ -971,7 +963,7 @@ static void quickMenuSplit()
 {
     // Toggle split state
     setVFOSplit( !bVFOSplit );
-    leaveQuickMenu( true );
+    enterVFOMode();
 }
 
 // Display the quick menu text
@@ -998,26 +990,6 @@ static void enterQuickMenu()
 
     // Display the current menu text
     quickMenuDisplayText();
-}
-
-// Leave the menu and go back to VFO mode
-static void leaveMenu()
-{
-    // Go to VFO mode
-    currentMode = modeVFO;
-
-    // Next time we enter the menu start not in a menu item
-    bEnteredMenuItem = false;
-
-    // Display the cursor in the right place
-    update_cursor();
-
-    // Clear the second line as no longer in the menu
-    displaySplitLine( 0, FREQ_LINE + 1 );
-    displayText( FREQ_LINE+1, "", true);
-
-    // Update the display with the correct split for the current VFO mode
-    update_display();
 }
 
 // Handle the rotary control while in the menu
@@ -1086,7 +1058,7 @@ static void rotaryMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, 
             }
             else if( bLongPress )
             {
-                leaveMenu();
+                enterVFOMode();
             }
         }
         else
@@ -1180,7 +1152,7 @@ static void rotaryQuickMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPr
     else if( bLongPress )
     {
         // A long press take us out of the menu
-        leaveQuickMenu( false );
+        enterVFOMode( false );
     }
 }
 
@@ -1237,7 +1209,7 @@ static bool menuVFOBand( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
             nvramWriteBand( newBand );
 
             // Leave the menu and go back to VFO mode
-            leaveMenu();
+            enterVFOMode();
         }
         
         bUsed = true;
@@ -1614,7 +1586,7 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
             nvramWriteXtalFreq( newFreq );
             
             // Take us out of the menu item
-            leaveMenu();
+            enterVFOMode();
 
             bUsed = false;
         }
@@ -1765,7 +1737,7 @@ static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPres
         nvramWriteMorseKeyerMode( keyerMode );
         
         // Leave the menu and go back to VFO mode
-        leaveMenu();
+        enterVFOMode();
     }
 
     return bUsed;
@@ -1962,15 +1934,20 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
         // Display the cursor in the correct place
         update_cursor();
     }
-    else if( bLongPress || bShortPressLeft )
+    else if( bLongPress )
     {
-        // A long press takes us to the quick menu
+        // A long press takes us to the menu
+        enterMenu();
+    }
+    else if( bShortPressLeft )
+    {
+        // A left press takes us to the quick menu
         enterQuickMenu();
     }
     else if( bShortPressRight )
     {
-        // A right press takes us to the menu
-        enterMenu();
+        // A right press takes us to WPM
+        enterWpm();
     }
     else
     {
@@ -2057,10 +2034,17 @@ static void rotaryWpm( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
     // A long press enters the menu
     else if( bLongPress )
     {
-        // Write the new morse speed to NVRAM
-        // Only writes if has actually changed
-        nvramWriteWpm( newWpm );
         enterMenu();
+    }
+    // A right press puts us back to VFO mode
+    else if( bShortPressRight )
+    {
+        enterVFOMode();
+    }
+    // A left press puts us in the quick menu
+    else if( bShortPressLeft )
+    {
+        enterQuickMenu();
     }
 
     // If the wpm is to change then check it is in range before
@@ -2082,9 +2066,11 @@ static void rotaryWpm( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
         morseWpm = newWpm;
         morseSetWpm( newWpm );
         
+        // Write the new morse speed to NVRAM
+        nvramWriteWpm( newWpm );
+
         // Display the new speed
         update_display();
-
     }
 }
 
