@@ -224,12 +224,11 @@ static const struct sCursorPos vfoCursorTransition[] =
 {
     { 9, 1, 10 },
     { 8, 1, 100 },
+    { 7, 1, 250 },
     { 6, 1, 1000 },
+    { 5, 1, 10000 },
     { CURSOR_TRANSITION_END, CURSOR_TRANSITION_END, CURSOR_TRANSITION_END }
 };
-
-// When at this index in the table the VFO can be sped up if the dial is spun quickly
-#define CURSOR_FAST_INDEX 2
 
 // Index for the current cursor position
 static uint8_t cursorIndex;
@@ -353,7 +352,7 @@ void setBandFromFrequency( uint32_t freq )
     {
         // Yes it is
         // See what band it is in
-        for( int b = 0 ; b < NUM_BANDS ; b++ )
+        for( uint8_t b = 0 ; b < NUM_BANDS ; b++ )
         {
             if( freq <= band[b].maxFreq )
             {
@@ -683,7 +682,7 @@ static void update_display()
 }
 
 // Set the RX frequency
-void setRXFrequency( uint32_t freq )
+static void setRXFrequency( uint32_t freq )
 {
     // The RX oscillator has to be offset for the CW tone to be audible
     // Decide if we are using CW normal or reverse
@@ -728,8 +727,6 @@ static void setFrequencies()
 // Set the band - sets the frequencies and memories to the new band's default
 static void setBand( int newBand )
 {
-    currentBand = newBand;
-
     // Set the default frequency for both VFOs
     // Go into simplex mode
     vfoState[VFO_A].freq = band[newBand].defaultFreq;
@@ -1869,13 +1866,6 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
     // How much to change frequency by
     int16_t change;
     
-    // See how quickly we have rotated the control so that we can speed up
-    // the rate in fast mode if the dial is spun
-    static uint32_t prevTime;
-    uint32_t currentTime = millis();
-    uint32_t diffTime = currentTime - prevTime;
-    prevTime = currentTime;
-    
     // Set the amount each click changes VFO by
     change = vfoCursorTransition[cursorIndex].freqChange;
 
@@ -1893,12 +1883,6 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
     {
         // Control not moved so no change
         change = 0;
-    }
-
-    // In fast VFO mode we speed up the change if the dial is spun
-    if( cursorIndex == CURSOR_FAST_INDEX && (diffTime < VFO_SPEED_UP_DIFF) )
-    {
-        change *= VFO_SPEED_UP_FACTOR;
     }
 
     if( bShortPress )
