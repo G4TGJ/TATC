@@ -2113,13 +2113,15 @@ static void handleRotary()
 static void loop()
 {
     // See if the morse paddles or straight key have been pressed
-	morseScanPaddles();
-    
-    // Deal with the rotary control/pushbutton
-    handleRotary();
+    // If not active then deal with other things too
+	if( !morseScanPaddles() )
+    {
+        // Deal with the rotary control/pushbutton
+        handleRotary();
 
-    // Do CAT control
-    catControl();
+        // Do CAT control
+        catControl();
+    }
 }
 
 int main(void)
