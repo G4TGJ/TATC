@@ -28,9 +28,9 @@ bool ioReadRightButton();
 void ioWriteMorseOutputHigh();
 void ioWriteMorseOutputLow();
 
-// Set the TX output low or high
-void ioWriteTXOutputLow();
-void ioWriteTXOutputHigh();
+// Set the RX enable low or high
+void ioWriteRXEnableLow();
+void ioWriteRXEnableHigh();
 
 // Switch the sidetone output on or off
 void ioWriteSidetoneOn();

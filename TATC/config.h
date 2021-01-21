@@ -104,9 +104,9 @@ typedef uint8_t bool;
 #define MORSE_OUTPUT_OUT_REG     VPORTA.OUT
 #define MORSE_OUTPUT_PIN         6
 
-#define TX_OUTPUT_DIR_REG     VPORTA.DIR
-#define TX_OUTPUT_OUT_REG     VPORTA.OUT
-#define TX_OUTPUT_PIN         7
+#define RX_ENABLE_DIR_REG     VPORTA.DIR
+#define RX_ENABLE_OUT_REG     VPORTA.OUT
+#define RX_ENABLE_PIN         7
 
 // There are 3 band relays
 #define NUM_RELAYS 3
@@ -180,10 +180,10 @@ typedef uint8_t bool;
 #define MORSE_OUTPUT_PIN_REG    PINB
 #define MORSE_OUTPUT_DDR_REG    DDRB
 #define MORSE_OUTPUT_PIN        PB2
-#define TX_OUTPUT_PORT_REG      PORTC
-#define TX_OUTPUT_PIN_REG       PINC
-#define TX_OUTPUT_DDR_REG       DDRC
-#define TX_OUTPUT_PIN           PC3
+#define RX_ENABLE_PORT_REG      PORTC
+#define RX_ENABLE_PIN_REG       PINC
+#define RX_ENABLE_DDR_REG       DDRC
+#define RX_ENABLE_PIN           PC3
 
 // Rotary encoder to use the ADC to save pins
 #define ROTARY_ANALOGUE

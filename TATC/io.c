@@ -111,8 +111,8 @@ void ioInit()
     MORSE_OUTPUT_DIR_REG |= (1 << MORSE_OUTPUT_PIN);
     MORSE_OUTPUT_OUT_REG &= ~(1 << MORSE_OUTPUT_PIN);
 
-    TX_OUTPUT_DIR_REG |= (1 << TX_OUTPUT_PIN);
-    TX_OUTPUT_OUT_REG |= (1 << TX_OUTPUT_PIN);
+    RX_ENABLE_DIR_REG |= (1 << RX_ENABLE_PIN);
+    RX_ENABLE_OUT_REG |= (1 << RX_ENABLE_PIN);
 
     // Set up timer TCB1 to produce sidetone on PA3
     // We will get the clock from TCA0 (the millisecond timer) which we
@@ -180,15 +180,15 @@ void ioWriteMorseOutputLow()
     MORSE_OUTPUT_OUT_REG &= ~(1<<MORSE_OUTPUT_PIN);
 }
 
-// Set the TX output high or low
-void ioWriteTXOutputHigh()
+// Set RX enable high or low
+void ioWriteRXEnableHigh()
 {
-    TX_OUTPUT_OUT_REG |= (1<<TX_OUTPUT_PIN);
+    RX_ENABLE_OUT_REG |= (1<<RX_ENABLE_PIN);
 }
 
-void ioWriteTXOutputLow()
+void ioWriteRXEnableLow()
 {
-    TX_OUTPUT_OUT_REG &= ~(1<<TX_OUTPUT_PIN);
+    RX_ENABLE_OUT_REG &= ~(1<<RX_ENABLE_PIN);
 }
 
 // Switch the sidetone output on or off
@@ -359,16 +359,16 @@ void ioWriteMorseOutputLow()
     MORSE_OUTPUT_PORT_REG &= ~(1<<MORSE_OUTPUT_PIN);
 }
 
-// Set the TX output low
-void ioWriteTXOutputLow()
+// Set RX enable low
+void ioWriteRXEnableLow()
 {
-    TX_OUTPUT_PORT_REG &= ~(1<<TX_OUTPUT_PIN);
+    RX_ENABLE_PORT_REG &= ~(1<<RX_ENABLE_PIN);
 }
 
-// Set the TX output high
-void ioWriteTXOutputHigh()
+// Set RX enable high
+void ioWriteRXEnableHigh()
 {
-    TX_OUTPUT_PORT_REG |= (1<<TX_OUTPUT_PIN);
+    RX_ENABLE_PORT_REG |= (1<<RX_ENABLE_PIN);
 }
 
 // Switch the sidetone output on
@@ -399,14 +399,14 @@ void ioInit()
 {
 	// Initialise morse and LED outputs
     MORSE_OUTPUT_DDR_REG |= (1<<MORSE_OUTPUT_PIN);
-    TX_OUTPUT_DDR_REG    |= (1<<TX_OUTPUT_PIN);
+    RX_ENABLE_DDR_REG    |= (1<<RX_ENABLE_PIN);
     RELAY_OUTPUT_DDR_REG   |= (1<<RELAY_OUTPUT_PIN);
 
     // Turn off the band relay
     RELAY_OUTPUT_PORT_REG &= ~(1<<RELAY_OUTPUT_PIN);
 
     // Unmute the RX
-    TX_OUTPUT_PORT_REG |= (1<<TX_OUTPUT_PIN);
+    RX_ENABLE_PORT_REG |= (1<<RX_ENABLE_PIN);
     
     // Paddle dot and dash pins as inputs with pull-ups
     MORSE_PADDLE_DOT_PORT_REG |= (1<<MORSE_PADDLE_DOT_PIN);

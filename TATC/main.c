@@ -443,11 +443,11 @@ static void muteRX( bool bMute )
 {
     if( bMute )
     {
-        ioWriteTXOutputLow();
+        ioWriteRXEnableLow();
     }
     else
     {
-        ioWriteTXOutputHigh();
+        ioWriteRXEnableHigh();
     }
 }
 
