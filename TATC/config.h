@@ -38,6 +38,31 @@ typedef uint8_t bool;
 
 // I/O definitions
 
+// Pushbuttons to use the ADC to save pins
+#define ANALOGUE_BUTTONS
+
+// Pushbutton inputs
+// Either connected to an ADC input
+// or to GPIO pins.
+#ifdef ANALOGUE_BUTTONS
+
+// ADC used for the buttons with input channel,
+// pin control register and interrupt vector
+#define BUTTON_ADC              ADC1
+#define BUTTON_ADC_CHAN         ADC_MUXPOS_AIN6_gc
+#define BUTTON_ADC_PINCTRL      PORTC.PIN0CTRL
+#define BUTTON_ADC_RESRDY_vect  ADC1_RESRDY_vect
+
+// ADC values for the rotary A, B and switch outputs.
+#define LEFT_BUTTON_MIN 0
+#define LEFT_BUTTON_MAX 49
+#define RIGHT_BUTTON_MIN 50
+#define RIGHT_BUTTON_MAX 109
+#define ROTARY_SW_MIN 110
+#define ROTARY_SW_MAX 220
+
+#else
+
 #define RIGHT_DIR_REG      VPORTC.DIR
 #define RIGHT_IN_REG       VPORTC.IN
 #define RIGHT_PIN          0
@@ -48,6 +73,13 @@ typedef uint8_t bool;
 #define LEFT_PIN          2
 #define LEFT_PIN_CTRL     PORTB.PIN2CTRL
 
+#define ROTARY_ENCODER_SW_DIR_REG   VPORTC.DIR
+#define ROTARY_ENCODER_SW_IN_REG    VPORTC.IN
+#define ROTARY_ENCODER_SW_PIN       1
+#define ROTARY_ENCODER_SW_PIN_CTRL  PORTC.PIN1CTRL
+
+#endif
+
 #define ROTARY_ENCODER_A_DIR_REG    VPORTC.DIR
 #define ROTARY_ENCODER_A_IN_REG     VPORTC.IN
 #define ROTARY_ENCODER_A_PIN        2
@@ -57,11 +89,6 @@ typedef uint8_t bool;
 #define ROTARY_ENCODER_B_IN_REG     VPORTC.IN
 #define ROTARY_ENCODER_B_PIN        3
 #define ROTARY_ENCODER_B_PIN_CTRL   PORTC.PIN3CTRL
-
-#define ROTARY_ENCODER_SW_DIR_REG   VPORTC.DIR
-#define ROTARY_ENCODER_SW_IN_REG    VPORTC.IN
-#define ROTARY_ENCODER_SW_PIN       1
-#define ROTARY_ENCODER_SW_PIN_CTRL  PORTC.PIN1CTRL
 
 #define MORSE_PADDLE_DASH_DIR_REG    VPORTA.DIR
 #define MORSE_PADDLE_DASH_IN_REG     VPORTA.IN

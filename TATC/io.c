@@ -45,23 +45,58 @@ void ioInit()
     }
 
     // Set the input pins to inputs with pull ups
-    ROTARY_ENCODER_SW_DIR_REG &= ~(1 << ROTARY_ENCODER_SW_PIN);
-    ROTARY_ENCODER_SW_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
     ROTARY_ENCODER_A_DIR_REG &= ~(1 << ROTARY_ENCODER_A_PIN);
     ROTARY_ENCODER_A_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
     ROTARY_ENCODER_B_DIR_REG &= ~(1 << ROTARY_ENCODER_B_PIN);
     ROTARY_ENCODER_B_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
+
+    MORSE_PADDLE_DOT_DIR_REG &= ~(1 << MORSE_PADDLE_DOT_PIN);
+    MORSE_PADDLE_DOT_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
+    MORSE_PADDLE_DASH_DIR_REG &= ~(1 << MORSE_PADDLE_DASH_PIN);
+    MORSE_PADDLE_DASH_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
+
+    // The three pushbuttons may be on an analogue input to save pins
+#ifdef ANALOGUE_BUTTONS
+    // Disable digital input buffer
+    BUTTON_ADC_PINCTRL &= ~PORT_ISC_gm;
+    BUTTON_ADC_PINCTRL |= PORT_ISC_INPUT_DISABLE_gc;
+
+    // Enable pull-up resistor
+    BUTTON_ADC_PINCTRL |= PORT_PULLUPEN_bm;
+
+    // Set clock prescaler and voltage reference + sample capacitance
+    // We divide the clock by the maximum because we have no need to sample
+    // very often.
+    BUTTON_ADC.CTRLC = ADC_SAMPCAP_bm | ADC_PRESC_DIV256_gc | ADC_REFSEL_VDDREF_gc;
+
+    // Enable the ADC in 8 bit mode
+    BUTTON_ADC.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_8BIT_gc;
+
+    // Select ADC channel
+    BUTTON_ADC.MUXPOS = BUTTON_ADC_CHAN;
+
+    // Enable FreeRun mode
+    BUTTON_ADC.CTRLA |= ADC_FREERUN_bm;
+
+    // Set delay and sample time to minimise sample rate
+    BUTTON_ADC.CTRLD = ADC_SAMPDLY_gm;
+    BUTTON_ADC.SAMPCTRL = ADC_SAMPLEN_gm;
+
+    // Start the first conversion
+    // As we are in free run mode it will just keep converting
+    // and we can read it whenever we need the latest value
+    BUTTON_ADC.COMMAND = ADC_STCONV_bm;
+
+#else
+    ROTARY_ENCODER_SW_DIR_REG &= ~(1 << ROTARY_ENCODER_SW_PIN);
+    ROTARY_ENCODER_SW_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
 
     LEFT_DIR_REG &= ~(1 << LEFT_PIN);
     LEFT_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
 
     RIGHT_DIR_REG &= ~(1 << RIGHT_PIN);
     RIGHT_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
-
-    MORSE_PADDLE_DOT_DIR_REG &= ~(1 << MORSE_PADDLE_DOT_PIN);
-    MORSE_PADDLE_DOT_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
-    MORSE_PADDLE_DASH_DIR_REG &= ~(1 << MORSE_PADDLE_DASH_PIN);
-    MORSE_PADDLE_DASH_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
+#endif
 
     // Set the output pins to outputs and turn off
     RELAY_0_OUTPUT_DIR_REG |= (1 << RELAY_0_OUTPUT_PIN);
@@ -97,18 +132,30 @@ void ioReadRotary( bool *pbA, bool *pbB, bool *pbSw )
 {
     *pbA  = !(ROTARY_ENCODER_A_IN_REG & (1 << ROTARY_ENCODER_A_PIN));
     *pbB  = !(ROTARY_ENCODER_B_IN_REG & (1 << ROTARY_ENCODER_B_PIN));
+#ifdef ANALOGUE_BUTTONS
+    *pbSw = ( (BUTTON_ADC.RES >= ROTARY_SW_MIN) && (BUTTON_ADC.RES <= ROTARY_SW_MAX) );
+#else
     *pbSw = !(ROTARY_ENCODER_SW_IN_REG & (1 << ROTARY_ENCODER_SW_PIN));
+#endif
 }
 
 // Read the left and right pushbuttons
 bool ioReadLeftButton()
 {
+#ifdef ANALOGUE_BUTTONS
+    return ( (BUTTON_ADC.RES >= LEFT_BUTTON_MIN) && (BUTTON_ADC.RES <= LEFT_BUTTON_MAX) );
+#else
     return !(LEFT_IN_REG & (1 << LEFT_PIN));
+#endif
 }
 
 bool ioReadRightButton()
 {
+#ifdef ANALOGUE_BUTTONS
+    return ( (BUTTON_ADC.RES >= RIGHT_BUTTON_MIN) && (BUTTON_ADC.RES <= RIGHT_BUTTON_MAX) );
+#else
     return !(RIGHT_IN_REG & (1 << RIGHT_PIN));
+#endif
 }
 
 // Read the morse dot and dash paddles
