@@ -221,6 +221,7 @@ typedef uint8_t bool;
 
 // Display definitions
 // LCD Port definitions
+#define LCD_PORT
 #define LCD_ENABLE_PORT PORTB
 #define LCD_ENABLE_DDR  DDRB
 #define LCD_ENABLE_PIN  PB3
