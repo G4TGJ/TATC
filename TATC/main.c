@@ -357,19 +357,13 @@ void setBandFromFrequency( uint32_t freq )
             if( freq <= band[b].maxFreq )
             {
                 // Whether or not we are in band this must be the relay state we need
-                // to choose the LPF
+                // for the correct LPF
                 currentRelay = band[b].relayState;
 
-                // If the frequency is in the band then set it
-                // If not in a band then leave the band unchanged
-                // Won't be allowed to transmit out of band so it doesn't matter
-                if( freq >= band[b].minFreq )
-                {
-                    currentBand = b;
+                currentBand = b;
 
-                    // Store the band in the NVRAM
-                    nvramWriteBand( b );
-                }
+                // Store the band in the NVRAM
+                nvramWriteBand( b );
 
                 // We can stop looking whether out of band or not
                 break;
