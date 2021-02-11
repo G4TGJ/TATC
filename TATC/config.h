@@ -108,8 +108,8 @@ typedef uint8_t bool;
 #define RX_ENABLE_OUT_REG     VPORTA.OUT
 #define RX_ENABLE_PIN         7
 
-// There are 3 band relays
-#define NUM_RELAYS 3
+// The number of band relays
+#define NUM_RELAYS 5
 
 #define RELAY_0_OUTPUT_DIR_REG     VPORTB.DIR
 #define RELAY_0_OUTPUT_OUT_REG     VPORTB.OUT
@@ -122,6 +122,14 @@ typedef uint8_t bool;
 #define RELAY_2_OUTPUT_DIR_REG     VPORTB.DIR
 #define RELAY_2_OUTPUT_OUT_REG     VPORTB.OUT
 #define RELAY_2_OUTPUT_PIN         5
+
+#define RELAY_3_OUTPUT_DIR_REG     VPORTC.DIR
+#define RELAY_3_OUTPUT_OUT_REG     VPORTC.OUT
+#define RELAY_3_OUTPUT_PIN         1
+
+#define RELAY_4_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_4_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_4_OUTPUT_PIN         2
 
 // Oscillator chip definitions
 // I2C address
@@ -318,28 +326,28 @@ typedef uint8_t bool;
 #define RELAY_STATE_80M    0
 #define TX_ENABLED_80M     true
 
-#define RELAY_STATE_60M    1
-#define TX_ENABLED_60M     false
+#define RELAY_STATE_60M    3
+#define TX_ENABLED_60M     true
 
 #define RELAY_STATE_40M    1
 #define TX_ENABLED_40M     true
 
 #define RELAY_STATE_30M    2
-#define TX_ENABLED_30M     false
+#define TX_ENABLED_30M     true
 
-#define RELAY_STATE_20M    2
+#define RELAY_STATE_20M    4
 #define TX_ENABLED_20M     true
 
-#define RELAY_STATE_17M    2
+#define RELAY_STATE_17M    4
 #define TX_ENABLED_17M     false
 
-#define RELAY_STATE_15M    2
+#define RELAY_STATE_15M    4
 #define TX_ENABLED_15M     false
 
-#define RELAY_STATE_12M    2
+#define RELAY_STATE_12M    4
 #define TX_ENABLED_12M     false
 
-#define RELAY_STATE_10M    2
+#define RELAY_STATE_10M    4
 #define TX_ENABLED_10M     false
 
 // Time for debouncing a switch (ms)
