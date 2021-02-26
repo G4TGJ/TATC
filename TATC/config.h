@@ -53,13 +53,13 @@ typedef uint8_t bool;
 #define BUTTON_ADC_PINCTRL      PORTC.PIN0CTRL
 #define BUTTON_ADC_RESRDY_vect  ADC1_RESRDY_vect
 
-// ADC values for the rotary A, B and switch outputs.
-#define LEFT_BUTTON_MIN 0
-#define LEFT_BUTTON_MAX 49
-#define RIGHT_BUTTON_MIN 50
-#define RIGHT_BUTTON_MAX 109
-#define ROTARY_SW_MIN 110
-#define ROTARY_SW_MAX 220
+// ADC values for the left, right and rotary buttons.
+#define ROTARY_SW_MIN 0
+#define ROTARY_SW_MAX 49
+#define LEFT_BUTTON_MIN 50
+#define LEFT_BUTTON_MAX 110
+#define RIGHT_BUTTON_MIN 110
+#define RIGHT_BUTTON_MAX 220
 
 #else
 
