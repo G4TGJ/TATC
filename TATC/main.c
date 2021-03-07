@@ -220,7 +220,8 @@ struct sCursorPos
 #define CURSOR_TRANSITION_END 0xFF
 
 // The cursor transitions for the VFO
-static const struct sCursorPos vfoCursorTransition[] =
+#define NUM_CURSOR_TRANSITIONS 6
+static const struct sCursorPos vfoCursorTransition[NUM_CURSOR_TRANSITIONS] =
 {
     { 9, 1, 10 },
     { 8, 1, 100 },
@@ -785,6 +786,18 @@ static void enterMenu()
     menuDisplayText();
 }
 
+// Quick way to the VFO menu
+static void enterVFOBandMenu()
+{
+    currentMenu = VFO_MENU;
+    currentSubMenu = 1;
+    currentMode = modeMenu;
+    bInMenuItem = true;
+
+    // Display the current menu text
+    menuVFOBand(false, false, false, false, false, false, false, false);
+}
+
 // Go back to VFO mode
 static void enterVFOMode()
 {
@@ -885,35 +898,49 @@ static void quickMenuRIT()
     enterVFOMode();
 }
 
-// Quick menu item XIT selected
-static void quickMenuXIT()
+// Set XIT on or off - called from quick menu or CAT control
+void setCurrentVFOXIT( bool bXIT )
 {
     // Ignore if in split mode
     if( !bVFOSplit )
     {
-        switch( vfoState[currentVFO].mode )
+        if( bXIT )
         {
-            // If in XIT then back to simplex
-            case vfoXIT:
-                vfoState[currentVFO].mode = vfoSimplex;
-                break;
+            vfoState[currentVFO].mode = vfoXIT;
 
-            // If in simplex or RIT then go to XIT
-            case vfoSimplex:
-            case vfoRIT:
-            default:
-                vfoState[currentVFO].mode = vfoXIT;
-
-                // Always on the second line in XIT mode
-                bVFOFirstLine = false;
-                break;
+            // Always on the second line in XIT mode
+            bVFOFirstLine = false;
+        }
+        else
+        {
+            vfoState[currentVFO].mode = vfoSimplex;
         }
 
         // Update the frequencies and display
         setFrequencies();
-
-        enterVFOMode();
+        update_cursor();
     }
+}
+
+// Quick menu item XIT selected
+static void quickMenuXIT()
+{
+    switch( vfoState[currentVFO].mode )
+    {
+        // If in XIT then back to simplex
+        case vfoXIT:
+            setCurrentVFOXIT( false );
+            break;
+
+        // If in simplex or RIT then go to XIT
+        case vfoSimplex:
+        case vfoRIT:
+        default:
+            setCurrentVFOXIT( true );
+            break;
+    }
+
+    enterVFOMode();
 }
 
 // Set the VFO split state - for CAT control or the quick menu
@@ -1104,10 +1131,19 @@ static void rotaryMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, 
     }
 }
 
+// Return to simplex VFO mode
+static void enterSimplex()
+{
+    setCurrentVFORIT( false );
+    setCurrentVFOXIT( false );
+    setVFOSplit( false );
+    enterVFOMode();
+}
+
 // Handle the rotary control while in the quick menu
 static void rotaryQuickMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
-    if( bCW )
+    if( bShortPressRight )
     {
         if( quickMenuItem == (NUM_QUICK_MENUS-1))
         {
@@ -1121,7 +1157,7 @@ static void rotaryQuickMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPr
         // Display the new menu item
         quickMenuDisplayText();
     }
-    else if( bCCW )
+    else if( bShortPressLeft )
     {
         if( quickMenuItem == 0)
         {
@@ -1143,7 +1179,17 @@ static void rotaryQuickMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPr
     else if( bLongPress )
     {
         // A long press take us out of the menu
-        enterVFOMode( false );
+        enterVFOMode();
+    }
+    else if( bLongPressLeft )
+    {
+        // A long left press puts us back to simplex VFO mode
+        enterSimplex();
+    }
+    else if( bLongPressRight )
+    {
+        // A long right press puts us into WPM mode
+        enterWpm();
     }
 }
 
@@ -1894,14 +1940,10 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
                 bVFOFirstLine = true;
             }
         }
-        // In simplex mode a short press moves to the next digit
         else if( vfoState[currentVFO].mode == vfoSimplex )
         {
-            cursorIndex++;
-            if( vfoCursorTransition[cursorIndex].x == CURSOR_TRANSITION_END )
-            {
-                cursorIndex = 0;
-            }
+            // In simplex mode a short press enters the band setting menu
+            enterVFOBandMenu();
         }
         else
         {
@@ -1919,12 +1961,41 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
     }
     else if( bShortPressLeft )
     {
-        // A left press takes us to the quick menu
-        enterQuickMenu();
+        cursorIndex++;
+        if( vfoCursorTransition[cursorIndex].x == CURSOR_TRANSITION_END )
+        {
+            cursorIndex = 0;
+        }
+        update_cursor();
+    }
+    else if( bLongPressLeft )
+    {
+        if( vfoState[currentVFO].mode == vfoSimplex )
+        {
+            // A long left press takes us to the quick menu in simplex
+            enterQuickMenu();
+        }
+        else
+        {
+            // Otherwise it takes us back to simplex
+            enterSimplex();
+        }
     }
     else if( bShortPressRight )
     {
-        // A right press takes us to WPM
+        if( cursorIndex == 0 )
+        {
+            cursorIndex = NUM_CURSOR_TRANSITIONS - 2;
+        }
+        else
+        {
+            cursorIndex--;
+        }
+        update_cursor();
+    }
+    else if( bLongPressRight )
+    {
+        // A long right press takes us to WPM
         enterWpm();
     }
     else
@@ -2073,7 +2144,7 @@ static void handleRotary()
     debouncePushbutton( ioReadLeftButton(),  &bShortPressLeft,  &bLongPressLeft,  DEBOUNCE_TIME, LONG_PRESS_TIME, &debounceStateLeft);
     debouncePushbutton( ioReadRightButton(), &bShortPressRight, &bLongPressRight, DEBOUNCE_TIME, LONG_PRESS_TIME, &debounceStateRight);
 
-    // Read the rotary state and the left and right buttons
+    // Read the rotary state
     readRotary(&bCW, &bCCW, &bShortPress, &bLongPress);
 
     // Call the handler if anything has happened
