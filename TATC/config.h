@@ -350,10 +350,10 @@ typedef uint8_t bool;
 #define RELAY_STATE_10M    4
 #define TX_ENABLED_10M     false
 
-// Time for debouncing a switch (ms)
+// Time for debouncing a button (ms)
 #define DEBOUNCE_TIME   100
 
-// Time for a key press to be a long press (ms)
+// Time for a button press to be a long press (ms)
 #define LONG_PRESS_TIME 250
 
 // Buffer lengths for the serial port
@@ -361,10 +361,10 @@ typedef uint8_t bool;
 #define SERIAL_RX_BUF_LEN 32
 #define SERIAL_TX_BUF_LEN 64
 
-// Time for debouncing a switch (ms)
+// Time for debouncing the rotary pushbutton (ms)
 #define ROTARY_BUTTON_DEBOUNCE_TIME   100
 
-// Time for a key press to be a long press (ms)
+// Time for the rotary pushbutton to be a long press (ms)
 #define ROTARY_LONG_PRESS_TIME 250
 
 #endif /* CONFIG_H_ */
