@@ -21,6 +21,10 @@ typedef uint8_t bool;
 
 #define ULONG_MAX 0xFFFFFFFF
 
+#define SOTA2
+
+// Each click changes the frequency by this amount
+#define SOTA2_FREQ_CHANGE 1000
 
 #ifdef VPORTC
 
@@ -108,6 +112,30 @@ typedef uint8_t bool;
 #define RX_ENABLE_OUT_REG     VPORTA.OUT
 #define RX_ENABLE_PIN         7
 
+#ifdef SOTA2
+
+// The number of band relays
+#define NUM_RELAYS 1
+
+#define RELAY_0_OUTPUT_DIR_REG     VPORTC.DIR
+#define RELAY_0_OUTPUT_OUT_REG     VPORTC.OUT
+#define RELAY_0_OUTPUT_PIN         1
+
+// Front panel LEDs
+#define RIGHT_LED_OUTPUT_DIR_REG   VPORTB.DIR
+#define RIGHT_LED_OUTPUT_OUT_REG   VPORTB.OUT
+#define RIGHT_LED_OUTPUT_PIN       2
+
+#define CENTRE_LED_OUTPUT_DIR_REG  VPORTB.DIR
+#define CENTRE_LED_OUTPUT_OUT_REG  VPORTB.OUT
+#define CENTRE_LED_OUTPUT_PIN      3
+
+#define LEFT_LED_OUTPUT_DIR_REG    VPORTB.DIR
+#define LEFT_LED_OUTPUT_OUT_REG    VPORTB.OUT
+#define LEFT_LED_OUTPUT_PIN        4
+
+#else
+
 // The number of band relays
 #define NUM_RELAYS 5
 
@@ -130,6 +158,8 @@ typedef uint8_t bool;
 #define RELAY_4_OUTPUT_DIR_REG     VPORTB.DIR
 #define RELAY_4_OUTPUT_OUT_REG     VPORTB.OUT
 #define RELAY_4_OUTPUT_PIN         2
+
+#endif
 
 // Oscillator chip definitions
 // I2C address
@@ -320,6 +350,16 @@ typedef uint8_t bool;
 // For each band, what state should the LPF/PA relay be in
 // and is TX allowed on the band
 
+#ifdef SOTA2
+
+#define RELAY_STATE_40M    0        // This means relay off
+#define TX_ENABLED_40M     true
+
+#define RELAY_STATE_20M    1
+#define TX_ENABLED_20M     true
+
+#else
+
 #define RELAY_STATE_160M   0
 #define TX_ENABLED_160M    false
 
@@ -349,6 +389,8 @@ typedef uint8_t bool;
 
 #define RELAY_STATE_10M    4
 #define TX_ENABLED_10M     false
+
+#endif
 
 // Time for debouncing a button (ms)
 #define DEBOUNCE_TIME   100

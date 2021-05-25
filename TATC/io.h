@@ -39,5 +39,11 @@ void ioWriteSidetoneOff();
 // Switch a band relay output on or off
 void ioWriteBandRelay( uint8_t relay, bool bOn );
 
+#ifdef SOTA2
+// Turn LEDs on or off
+void ioWriteRightLED( bool bOn );
+void ioWriteCentreLED( bool bOn );
+void ioWriteLeftLED( bool bOn );
+#endif
 
 #endif //IO_H

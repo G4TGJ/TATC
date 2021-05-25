@@ -30,6 +30,7 @@
 // Configure all the I/O we need
 void ioInit()
 {
+#if 0
     /* Set all pins to low power mode */
 
     for (uint8_t i = 0; i < 8; i++) {
@@ -43,7 +44,7 @@ void ioInit()
     for (uint8_t i = 0; i < 8; i++) {
         *((uint8_t *)&PORTC + 0x10 + i) |= 1 << PORT_PULLUPEN_bp;
     }
-
+#endif
     // Set the input pins to inputs with pull ups
     ROTARY_ENCODER_A_DIR_REG &= ~(1 << ROTARY_ENCODER_A_PIN);
     ROTARY_ENCODER_A_PIN_CTRL |= (1 << PORT_PULLUPEN_bp);
@@ -102,6 +103,17 @@ void ioInit()
     RELAY_0_OUTPUT_DIR_REG |= (1 << RELAY_0_OUTPUT_PIN);
     RELAY_0_OUTPUT_OUT_REG &= ~(1 << RELAY_0_OUTPUT_PIN);
 
+#ifdef SOTA2
+    RIGHT_LED_OUTPUT_DIR_REG |= (1 << RIGHT_LED_OUTPUT_PIN);
+    RIGHT_LED_OUTPUT_OUT_REG &= ~(1 << RIGHT_LED_OUTPUT_PIN);
+
+    LEFT_LED_OUTPUT_DIR_REG |= (1 << LEFT_LED_OUTPUT_PIN);
+    LEFT_LED_OUTPUT_OUT_REG &= ~(1 << LEFT_LED_OUTPUT_PIN);
+
+    CENTRE_LED_OUTPUT_DIR_REG |= (1 << CENTRE_LED_OUTPUT_PIN);
+    CENTRE_LED_OUTPUT_OUT_REG &= ~(1 << CENTRE_LED_OUTPUT_PIN);
+
+#else
     RELAY_1_OUTPUT_DIR_REG |= (1 << RELAY_1_OUTPUT_PIN);
     RELAY_1_OUTPUT_OUT_REG &= ~(1 << RELAY_1_OUTPUT_PIN);
 
@@ -113,6 +125,7 @@ void ioInit()
 
     RELAY_4_OUTPUT_DIR_REG |= (1 << RELAY_4_OUTPUT_PIN);
     RELAY_4_OUTPUT_OUT_REG &= ~(1 << RELAY_4_OUTPUT_PIN);
+#endif
 
     MORSE_OUTPUT_DIR_REG |= (1 << MORSE_OUTPUT_PIN);
     MORSE_OUTPUT_OUT_REG &= ~(1 << MORSE_OUTPUT_PIN);
@@ -148,19 +161,29 @@ void ioReadRotary( bool *pbA, bool *pbB, bool *pbSw )
 // Read the left and right pushbuttons
 bool ioReadLeftButton()
 {
+#ifdef SOTA2
+    // SOTA rig does not have a left or right button
+    return false;
+#else
 #ifdef ANALOGUE_BUTTONS
     return ( (BUTTON_ADC.RES >= LEFT_BUTTON_MIN) && (BUTTON_ADC.RES <= LEFT_BUTTON_MAX) );
 #else
     return !(LEFT_IN_REG & (1 << LEFT_PIN));
 #endif
+#endif
 }
 
 bool ioReadRightButton()
 {
+#ifdef SOTA2
+// SOTA rig does not have a left or right button
+return false;
+#else
 #ifdef ANALOGUE_BUTTONS
     return ( (BUTTON_ADC.RES >= RIGHT_BUTTON_MIN) && (BUTTON_ADC.RES <= RIGHT_BUTTON_MAX) );
 #else
     return !(RIGHT_IN_REG & (1 << RIGHT_PIN));
+#endif
 #endif
 }
 
@@ -197,6 +220,46 @@ void ioWriteRXEnableLow()
     RX_ENABLE_OUT_REG &= ~(1<<RX_ENABLE_PIN);
 }
 
+#ifdef SOTA2
+// Turn LEDs on or off
+void ioWriteRightLED( bool bOn )
+{
+    if( bOn )
+    {
+        RIGHT_LED_OUTPUT_OUT_REG |= (1<<RIGHT_LED_OUTPUT_PIN);
+    }
+    else
+    {
+        RIGHT_LED_OUTPUT_OUT_REG &= ~(1<<RIGHT_LED_OUTPUT_PIN);
+    }
+}
+
+void ioWriteCentreLED( bool bOn )
+{
+    if( bOn )
+    {
+        CENTRE_LED_OUTPUT_OUT_REG |= (1<<CENTRE_LED_OUTPUT_PIN);
+    }
+    else
+    {
+        CENTRE_LED_OUTPUT_OUT_REG &= ~(1<<CENTRE_LED_OUTPUT_PIN);
+    }
+}
+
+void ioWriteLeftLED( bool bOn )
+{
+    if( bOn )
+    {
+        LEFT_LED_OUTPUT_OUT_REG |= (1<<LEFT_LED_OUTPUT_PIN);
+    }
+    else
+    {
+        LEFT_LED_OUTPUT_OUT_REG &= ~(1<<LEFT_LED_OUTPUT_PIN);
+    }
+}
+
+#endif
+
 // Switch the sidetone output on or off
 void ioWriteSidetoneOn()
 {
@@ -219,10 +282,12 @@ static const struct
 relayMap[NUM_RELAYS] =
 {
     { &RELAY_0_OUTPUT_OUT_REG, (1 << RELAY_0_OUTPUT_PIN) },
+#ifndef SOTA2
     { &RELAY_1_OUTPUT_OUT_REG, (1 << RELAY_1_OUTPUT_PIN) },
     { &RELAY_2_OUTPUT_OUT_REG, (1 << RELAY_2_OUTPUT_PIN) },
     { &RELAY_3_OUTPUT_OUT_REG, (1 << RELAY_3_OUTPUT_PIN) },
     { &RELAY_4_OUTPUT_OUT_REG, (1 << RELAY_4_OUTPUT_PIN) },
+#endif
 };
 
 // Switch the band relay output on or off
