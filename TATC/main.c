@@ -152,18 +152,31 @@ static enum eCurrentMode
 } currentMode = modeVFO;
 
 // Band frequencies
+#ifdef SOTA2
+#define NUM_BANDS 2
+#else
 #define NUM_BANDS 13
+#endif
+
 static const struct  
 {
     char     *bandName;     // Text for the menu
     uint32_t  minFreq;      // Min band frequency
     uint32_t  maxFreq;      // Max band frequency
     uint32_t  defaultFreq;  // Where to start on this band e.g. QRP calling
+#ifdef SOTA2
+    uint32_t  leftFreq;     // Below this frequency light the left LED
+    uint32_t  rightFreq;    // Above this frequency light the right LED
+#endif
     bool      bTXEnabled;   // True if TX enabled on this band
     uint8_t   relayState;   // What state to put the relays in on this band
 }
 band[NUM_BANDS] =
 {
+#ifdef SOTA2
+    { "40m",     7000000,  7199999,  7030000,   7020000,  7040000, TX_ENABLED_40M,  RELAY_STATE_40M },
+    { "20m",    14000000, 14349999, 14060000,  14050000, 14070000, TX_ENABLED_20M,  RELAY_STATE_20M },
+#else
     { "160m",    1810000,  1999999,  1836000, TX_ENABLED_160M, RELAY_STATE_160M },
     { "80m",     3500000,  3799999,  3560000, TX_ENABLED_80M,  RELAY_STATE_80M },
     { "RWM",     4996000,  4996000,  4996000, false,           RELAY_STATE_60M },
@@ -177,6 +190,7 @@ band[NUM_BANDS] =
     { "15m",    21000000, 21449999, 21060000, TX_ENABLED_15M,  RELAY_STATE_15M },
     { "12m",    24890000, 24989999, 24906000, TX_ENABLED_12M,  RELAY_STATE_12M },
     { "10m",    28000000, 29699999, 28060000, TX_ENABLED_10M,  RELAY_STATE_10M },
+#endif
 };
 
 // Current band - initialised from NVRAM
@@ -376,11 +390,17 @@ void setBandFromFrequency( uint32_t freq )
 // Sets the relay for the current frequency
 static void setRelay()
 {
+#if NUM_RELAYS == 1
+    // If there is only one relay then it is either on or off rather
+    // than a relay per band
+    ioWriteBandRelay( 0, currentRelay );
+#else
     // Set each relay to off except for the current relay
     for( int i = 0 ; i < NUM_RELAYS ; i++ )
     {
         ioWriteBandRelay( i, currentRelay == i );
     }
+#endif
 }
 
 // Enable/disable the RX clock outputs
@@ -554,6 +574,27 @@ static void update_cursor()
 // Update the display with the frequency and morse wpm
 static void update_display()
 {
+#ifdef SOTA2
+    uint32_t freq = getRXFreq();
+
+    // Check we are in band
+    if( (freq >= band[currentBand].minFreq) &&
+        (freq <= band[currentBand].maxFreq) )
+    {
+        ioWriteLeftLED(   freq <= band[currentBand].leftFreq );
+        ioWriteCentreLED( freq == band[currentBand].defaultFreq );
+        ioWriteRightLED(  freq >= band[currentBand].rightFreq );
+    }
+    else
+    {
+        // Out of band so light all the LEDs
+        ioWriteLeftLED( true );
+        ioWriteCentreLED( true );
+        ioWriteRightLED( true );
+    }
+
+#endif
+
     char wpmText[TEXT_BUF_LEN];
     char freqText[TEXT_BUF_LEN*2];
     
@@ -1901,6 +1942,45 @@ void setCurrentVFOOffset( int16_t rit )
 }
 
 // Handle the rotary control while in the VFO mode
+#ifdef SOTA2
+static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
+{
+    // How much to change frequency by
+    int16_t change = SOTA2_FREQ_CHANGE;
+    
+    // Rotation is a change up or down in frequency
+    if( bCW )
+    {
+        // Leave change as is (+ve)
+    }
+    else if( bCCW )
+    {
+        // Counter clockwise means change is -ve
+        change = -change;
+    }
+    else
+    {
+        // Control not moved so no change
+        change = 0;
+    }
+
+    if( bShortPress )
+    {
+        // A short press takes us back to the home frequency for the current band
+        setBand( currentBand );
+    }
+    else if( bLongPress )
+    {
+        // A long press changes band
+        setBand( (currentBand+1)%NUM_BANDS );
+    }
+    else
+    {
+        adjustVFO( currentVFO, change, 0);
+    }
+}
+
+#else
 static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
     // How much to change frequency by
@@ -2027,6 +2107,7 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
         }
     }
 }
+#endif
 
 // Handle the rotary control while in the wpm setting mode
 static void rotaryWpm( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
