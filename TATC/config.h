@@ -24,7 +24,7 @@ typedef uint8_t bool;
 #define SOTA2
 
 // Each click changes the frequency by this amount
-#define SOTA2_FREQ_CHANGE 1000
+#define SOTA2_FREQ_CHANGE 100
 
 #ifdef VPORTC
 
