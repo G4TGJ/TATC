@@ -283,7 +283,11 @@ typedef uint8_t bool;
 
 // Position of default band in the frequency table defined in main.c
 // The band is stored in NVRAM so this is only used on first power up
+#ifdef SOTA2
+#define DEFAULT_BAND 0
+#else
 #define DEFAULT_BAND 3
+#endif
 
 // By default we are not using CW-Reverse mode
 #define DEFAULT_CWREVERSE false
