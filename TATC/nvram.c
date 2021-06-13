@@ -146,7 +146,7 @@ void nvramInit()
     }
 }
 
-// Functions to read and write parameters in the NVRAM
+// Functions to read parameters in the NVRAM
 // Read is actually already read and validated
 uint32_t nvramReadXtalFreq()
 {
@@ -163,36 +163,20 @@ enum eMorseKeyerMode nvramReadMorseKeyerMode()
     return keyerMode;
 }
 
-void nvramWriteWpm( uint8_t wpm )
-{
-}
-
-void nvramWriteXtalFreq( uint32_t freq )
-{
-}
-
-void nvramWriteMorseKeyerMode( enum eMorseKeyerMode keyer_mode )
-{
-}
-
+// Dummy functions for the band and CW mode as not stored in NVRAM
 void nvramWriteBand( uint8_t band )
-{
-}
-
-void nvramWriteCWReverse( bool bCWReverse )
 {
 }
 
 uint8_t nvramReadBand()
 {
-    return 0;
+    return DEFAULT_BAND;
 }
 
 uint8_t nvramReadCWReverse()
 {
     return false;
 }
-
 
 #else
 
