@@ -129,20 +129,9 @@ void nvramInit()
             bValid = false;
         }
 
-        // Get the morse speed
-        // First check both characters are decimal digits
-        if( isdigit(nvram_cache.wpm[0]) && isdigit(nvram_cache.wpm[1]) )
-        {
-            // Convert from ASCII to decimal
-            morseSpeed = (nvram_cache.wpm[0]-'0')*10 + (nvram_cache.wpm[1]-'0');
-
-            // Check it is within range
-            if( (morseSpeed < MIN_MORSE_WPM) || (morseSpeed > MAX_MORSE_WPM) )
-            {
-                bValid = false;
-            }
-        }
-        else
+        // Get the morse speed and check it is within range
+        morseSpeed = convertNum( nvram_cache.wpm, 2 );
+        if( (morseSpeed < MIN_MORSE_WPM) || (morseSpeed > MAX_MORSE_WPM) )
         {
             bValid = false;
         }
