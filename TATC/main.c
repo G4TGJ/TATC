@@ -563,7 +563,44 @@ void displayMorse( char *text )
 */
 }
 
-#ifndef SOTA2
+#ifdef SOTA2
+
+// For the SOTA transceiver we have 3 LEDs instead of an LCD.
+// The default frequency is the centre frequency (e.g. 14060)
+// and we have left and right frequencies (e.g. 14050 and 14070)
+// Centre LED lit between the left and right frequencies
+// Left LED lit below the centre
+// Right LED lit above the centre
+// All LEDs light out of band
+static void update_display()
+{
+    uint32_t freq = getRXFreq();
+
+    // Check we are in band
+    if( (freq >= band[currentBand].minFreq) &&
+        (freq <= band[currentBand].maxFreq) )
+    {
+        // Centre LED is lit if between the left and right frequencies
+        ioWriteCentreLED( (freq >= band[currentBand].leftFreq) &&
+                          (freq <= band[currentBand].rightFreq) );
+
+        // Left LED is lit if below the centre frequency
+        ioWriteLeftLED( freq < band[currentBand].defaultFreq);
+
+        // Right LED is lit if above the centre frequency
+        ioWriteRightLED( freq > band[currentBand].defaultFreq );
+    }
+    else
+    {
+        // Out of band so light all the LEDs
+        ioWriteLeftLED( true );
+        ioWriteCentreLED( true );
+        ioWriteRightLED( true );
+    }
+}
+
+#else
+
 // Set the correct cursor for the VFO mode
 static void update_cursor()
 {
@@ -590,27 +627,6 @@ static void update_cursor()
 // Update the display with the frequency and morse wpm
 static void update_display()
 {
-#ifdef SOTA2
-    uint32_t freq = getRXFreq();
-
-    // Check we are in band
-    if( (freq >= band[currentBand].minFreq) &&
-        (freq <= band[currentBand].maxFreq) )
-    {
-        ioWriteLeftLED(   freq <= band[currentBand].leftFreq );
-        ioWriteCentreLED( freq == band[currentBand].defaultFreq );
-        ioWriteRightLED(  freq >= band[currentBand].rightFreq );
-    }
-    else
-    {
-        // Out of band so light all the LEDs
-        ioWriteLeftLED( true );
-        ioWriteCentreLED( true );
-        ioWriteRightLED( true );
-    }
-
-#endif
-
     char wpmText[TEXT_BUF_LEN];
     char freqText[TEXT_BUF_LEN*2];
     
@@ -772,9 +788,9 @@ static void setFrequencies()
     setRXFrequency( getRXFreq() );
     oscSetFrequency( TX_CLOCK, getTXFreq(), 0 );
 
-#ifndef SOTA2
     // Ensure the display and cursor reflect this
     update_display();
+#ifndef SOTA2
     update_cursor();
 #endif
 }
