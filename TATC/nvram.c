@@ -19,6 +19,9 @@
 
 #ifdef SOTA2
 
+// Used to indicate the morse speed has not been set
+#define SPEED_NOT_SET 99
+
 // Magic numbers used to help verify the data is correct
 // ASCII "T2S " in little endian format
 #define MAGIC 0x20533254
@@ -29,8 +32,8 @@
 // Always starts with T2S
 //
 // ffffffff is the xtal frequency
-// x is A for Iambic A, B for Iambic B or U for Ultimatic
-// yy is the morse speed in wpm
+// x is A for Iambic A, B for Iambic B, U for Ultimatic or S for straight key
+// yy is the morse speed in wpm (ignored in straight key mode)
 //
 // For example:
 // T2S 27000123 A 18
@@ -110,30 +113,48 @@ void nvramInit()
             bValid = false;
         }
 
+        // Morse speed not yet set
+        morseSpeed = SPEED_NOT_SET;
+
         // Get the keyer mode
-        if( nvram_cache.keyer_mode == 'A' )
+        switch( nvram_cache.keyer_mode )
         {
-            keyerMode = morseKeyerIambicA;
-        }
-        else if( nvram_cache.keyer_mode == 'B' )
-        {
-            keyerMode = morseKeyerIambicB;
-        }
-        else if( nvram_cache.keyer_mode == 'U' )
-        {
-            keyerMode = morseKeyerUltimatic;
-        }
-        else
-        {
-            // Not valid
-            bValid = false;
+            case 'A':
+            case 'a':
+                keyerMode = morseKeyerIambicA;
+                break;
+
+            case 'B':
+            case 'b':
+                keyerMode = morseKeyerIambicB;
+                break;
+
+            case 'U':
+            case 'u':
+                keyerMode = morseKeyerUltimatic;
+                break;
+
+            case 'S':
+            case 's':
+                // Straight key mode is set with wpm as 0
+                morseSpeed = 0;
+                break;
+
+            default:
+                // Not valid
+                bValid = false;
+                break;
         }
 
-        // Get the morse speed and check it is within range
-        morseSpeed = convertNum( nvram_cache.wpm, 2 );
-        if( (morseSpeed < MIN_MORSE_WPM) || (morseSpeed > MAX_MORSE_WPM) )
+        // If the speed has not been set by straight key mode then read it
+        if( morseSpeed == SPEED_NOT_SET )
         {
-            bValid = false;
+            // Get the morse speed and check it is within range
+            morseSpeed = convertNum( nvram_cache.wpm, 2 );
+            if( (morseSpeed < MIN_MORSE_WPM) || (morseSpeed > MAX_MORSE_WPM) )
+            {
+                bValid = false;
+            }
         }
     }
 
