@@ -25,6 +25,7 @@
 #include "rotary.h"
 #include "pushbutton.h"
 
+#ifndef SOTA2
 // Menu functions
 static bool menuVFOBand( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 static bool menuVFOMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
@@ -150,6 +151,7 @@ static enum eCurrentMode
     modeWpm,
     modeQuickMenu,
 } currentMode = modeVFO;
+#endif
 
 // Band frequencies
 #ifdef SOTA2
@@ -204,14 +206,18 @@ static uint8_t currentBand;
 // Current relay state - always set from the frequency
 static uint8_t currentRelay;
 
+#ifndef SOTA2
 // Is the VFO on the first or second frequency line?
 static bool bVFOFirstLine = true;
+
 
 // For the xtal frequency the current digit position that is changing
 static uint8_t xtalFreqPos;
 
 // True if asking whether to save the xtal frequency setting
 static bool bAskToSaveXtalFreq = false;
+
+#endif
 	
 // Set to true if break in is enabled
 static bool bBreakIn = true;
@@ -228,6 +234,7 @@ enum eVFOMode
     vfoNumModes // Num of VFO modes. Must be the last entry.
 };
 
+#ifndef SOTA2
 // The cursor position along with its corresponding frequency change
 struct sCursorPos
 {
@@ -256,6 +263,7 @@ static uint8_t cursorIndex;
 // In fast mode, if the dial is spun the rate speeds up
 #define VFO_SPEED_UP_DIFF  150  // If dial clicks are no more than this ms apart then speed up
 #define VFO_SPEED_UP_FACTOR 10  // Multiply the rate by this
+#endif
 
 // Maintain transmit and receive frequencies for two VFOs
 // The current VFO
@@ -301,7 +309,9 @@ static uint8_t txDelay = 10;
 // Set to true when transmitting
 static bool bTransmitting = false;
 
+#ifndef SOTA2
 static void update_display();
+#endif
 
 // Works out the current RX frequency from the VFO settings
 static uint32_t getRXFreq()
@@ -553,6 +563,7 @@ void displayMorse( char *text )
 */
 }
 
+#ifndef SOTA2
 // Set the correct cursor for the VFO mode
 static void update_cursor()
 {
@@ -721,6 +732,7 @@ static void update_display()
         }
     }
 }
+#endif
 
 // Set the RX frequency
 static void setRXFrequency( uint32_t freq )
@@ -760,9 +772,11 @@ static void setFrequencies()
     setRXFrequency( getRXFreq() );
     oscSetFrequency( TX_CLOCK, getTXFreq(), 0 );
 
+#ifndef SOTA2
     // Ensure the display and cursor reflect this
     update_display();
     update_cursor();
+#endif
 }
 
 // Set the band - sets the frequencies and memories to the new band's default
@@ -784,7 +798,7 @@ static void setBand( int newBand )
     setFrequencies();
 }
 
-
+#ifndef SOTA2
 // Display the menu text for the current menu or sub menu
 static void menuDisplayText()
 {
@@ -1925,6 +1939,7 @@ bool getTransmitting()
 {
     return bTransmitting;
 }
+#endif
 
 // Adjust a VFO. Changes the frequency or the offset by the supplied change.
 // Could change both but not a normal usage (simplex changes the frequency, 
@@ -1937,13 +1952,6 @@ static void adjustVFO( uint8_t vfo, int16_t freqChange, int16_t offsetChange )
 
     // Set the new TX and RX frequencies
     setFrequencies();
-}
-
-// Set the RIT - called from CAT control
-void setCurrentVFOOffset( int16_t rit )
-{
-    // Set the RIT by changing the offset.
-    adjustVFO( currentVFO, 0, rit-vfoState[currentVFO].offset);
 }
 
 // Handle the rotary control while in the VFO mode
@@ -2112,7 +2120,13 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
         }
     }
 }
-#endif
+
+// Set the RIT - called from CAT control
+void setCurrentVFOOffset( int16_t rit )
+{
+    // Set the RIT by changing the offset.
+    adjustVFO( currentVFO, 0, rit-vfoState[currentVFO].offset);
+}
 
 // Handle the rotary control while in the wpm setting mode
 static void rotaryWpm( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
@@ -2208,6 +2222,7 @@ static void rotaryWpm( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
         update_display();
     }
 }
+#endif
 
 // See if the rotary control has been touched and handle its movement
 // This will update either the VFO or the wpm or the menu
@@ -2236,6 +2251,9 @@ static void handleRotary()
     // Call the handler if anything has happened
     if( bCW || bCCW || bShortPress || bLongPress || bShortPressLeft || bLongPressLeft || bShortPressRight || bLongPressRight )
     {
+#ifdef SOTA2
+        rotaryVFO(bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight);
+#else
         switch( currentMode )
         {
             case modeMenu:
@@ -2256,6 +2274,7 @@ static void handleRotary()
                 rotaryVFO(bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight);
                 break;
         }
+#endif
     }
 }
 
@@ -2270,8 +2289,10 @@ static void loop()
         // Deal with the rotary control/pushbutton
         handleRotary();
 
+#ifndef SOTA2
         // Do CAT control
         catControl();
+#endif
     }
 }
 
@@ -2291,15 +2312,19 @@ int main(void)
     // Initialise the NVRAM/EEPROM before other modules as it contains values needed for other setup
     nvramInit();
 
+#ifndef SOTA2
     // Initialise CAT control
     catInit();
+#endif
 
     // Set up morse and set the speed and keyer mode as read from NVRAM
     morseInit();
     morseSetWpm( nvramReadWpm() );
     morseSetKeyerMode( nvramReadMorseKeyerMode() );
 
+#ifndef SOTA2
     displayInit();
+#endif
    
     // Initialise the oscillator chip
 	bOscInit = oscInit();
@@ -2309,7 +2334,11 @@ int main(void)
 
     // Set the band from the NVRAM
     // This also updates the display with frequency and wpm.
+#ifdef SOTA2
+    setBand( DEFAULT_BAND );
+#else
     setBand( nvramReadBand() );
+#endif
 
     // Enable the RX clock outputs
     // We enable the TX output only when transmitting
