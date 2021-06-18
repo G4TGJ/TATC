@@ -111,6 +111,10 @@ static bool bInMenuItem;
 // Allows us to only enter wpm state if we have not been in a menu
 static bool bEnteredMenuItem;
 
+// Set to true if entered the VFO menu quickly so that we
+// can leave quickly
+static bool bInQuickVFOMenu;
+
 // Text for the quick menu line
 // In split mode cannot enter RIT or XIT so show them in lower case
 #define QUICK_MENU_TEXT         "A/B A=B R X SPLT"
@@ -854,7 +858,7 @@ static void enterWpm()
 static void enterMenu()
 {
     // In the menu but not yet in a menu item
-    //currentMenu = currentSubMenu = 0;
+    currentMenu = currentSubMenu = 0;
     currentMode = modeMenu;
     bInMenuItem = false;
 
@@ -870,8 +874,14 @@ static void enterVFOBandMenu()
     currentMode = modeMenu;
     bInMenuItem = true;
 
+    // We are entering the menu quickly so we can get out quickly
+    bInQuickVFOMenu = true;
+
     // Display the current menu text
     menuVFOBand(false, false, false, false, false, false, false, false);
+
+    // Turn off the cursor
+    displayCursor( 0, 0, cursorOff );
 }
 
 // Go back to VFO mode
@@ -1279,13 +1289,13 @@ static bool menuVFOBand( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
     static int newBand;
     
     // If just entered the menu note the current band
-    if( !bCW && !bCCW && !bShortPress &&!bLongPress )
+    if( !bShortPressRight && !bShortPressLeft && !bShortPress &&!bLongPress )
     {
         newBand = currentBand;
     }
 
-    // Deal with rotation
-    if( bCW )
+    // Right and left buttons change band
+    if( bShortPressRight )
     {
         // Don't go beyond the last band
         if( newBand < (NUM_BANDS-1) )
@@ -1294,7 +1304,7 @@ static bool menuVFOBand( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
         }
         bUsed = true;
     }
-    else if( bCCW )
+    else if( bShortPressLeft )
     {
         // Don't go before the first band
         if( newBand > 0 )
@@ -1323,8 +1333,21 @@ static bool menuVFOBand( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
 
             // Leave the menu and go back to VFO mode
             enterVFOMode();
+
+            // Left the menu
+            bInQuickVFOMenu = false;
         }
         
+        bUsed = true;
+    }
+
+    // If we entered the menu quickly then a long press takes us out
+    // and back into VFO mode
+    if( bLongPress && bInQuickVFOMenu )
+    {
+        bInQuickVFOMenu = false;
+        bInMenuItem = false;
+        enterVFOMode();
         bUsed = true;
     }
     
