@@ -21,7 +21,8 @@ typedef uint8_t bool;
 
 #define ULONG_MAX 0xFFFFFFFF
 
-#define SOTA2
+// Uncomment to build the two band SOTA transceiver without LCD
+//#define SOTA2
 
 // Each click changes the frequency by this amount
 #define SOTA2_FREQ_CHANGE 100
