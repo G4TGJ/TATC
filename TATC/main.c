@@ -1122,7 +1122,7 @@ static void rotaryMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, 
         if( currentSubMenu == 0 )
         {
             // In the top level menu
-            if( bCW )
+            if( bShortPressRight )
             {
                 if( currentMenu == (NUM_MENUS-1))
                 {
@@ -1136,7 +1136,7 @@ static void rotaryMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, 
                 // Display the new menu item
                 menuDisplayText();
             }
-            else if( bCCW )
+            else if( bShortPressLeft )
             {
                 if( currentMenu == 0)
                 {
@@ -1166,7 +1166,7 @@ static void rotaryMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, 
         else
         {
             // In a sub menu
-            if( bCW )
+            if( bShortPressRight )
             {
                 if( currentSubMenu == (menu[currentMenu].numItems-1))
                 {
@@ -1180,7 +1180,7 @@ static void rotaryMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, 
                 // Display the new menu item
                 menuDisplayText();
             }
-            else if( bCCW )
+            else if( bShortPressLeft )
             {
                 if( currentSubMenu == 1)
                 {
@@ -1400,8 +1400,8 @@ static bool menuVFOMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
     // Set to true if we have used the presses etc
     bool bUsed = false;
     
-    // Clockwise or counterclockwise movement
-    if( bCW || bCCW )
+    // Left or right toggles
+    if( bShortPressLeft || bShortPressRight )
     {
         // Toggle the CW mode
         bCWReverse = !bCWReverse;
@@ -1429,7 +1429,8 @@ static bool menuBreakIn( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
     // Set to true if we have used the presses etc
     bool bUsed = false;
     
-    if( bCW || bCCW )
+    // Left or right toggles
+    if( bShortPressLeft || bShortPressRight )
     {
         bBreakIn = !bBreakIn;
         bUsed = true;
@@ -1452,7 +1453,8 @@ static bool menuSidetone( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
     // Set to true if we have used the presses etc
     bool bUsed = false;
     
-    if( bCW || bCCW )
+    // Left or right toggles
+    if( bShortPressLeft || bShortPressRight )
     {
         bSidetone = !bSidetone;
         bUsed = true;
@@ -1475,7 +1477,8 @@ static bool menuTestRXMute( bool bCW, bool bCCW, bool bShortPress, bool bLongPre
     // Set to true if we have used the presses etc
     bool bUsed = false;
     
-    if( bCW || bCCW )
+    // Left or right toggles
+    if( bShortPressLeft || bShortPressRight )
     {
         bTestRXMute = !bTestRXMute;
         bUsed = true;
@@ -1501,7 +1504,8 @@ static bool menuRXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
     // Set to true if we have used the presses etc
     bool bUsed = false;
     
-    if( bCW || bCCW )
+    // Left or right toggles
+    if( bShortPressLeft || bShortPressRight )
     {
         bRXClockEnabled = !bRXClockEnabled;
         bUsed = true;
@@ -1567,7 +1571,8 @@ static bool menuTXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
     // Set to true if we have used the presses etc
     bool bUsed = false;
     
-    if( bCW || bCCW )
+    // Left or right toggles
+    if( bShortPressLeft || bShortPressRight )
     {
         bTXClockEnabled = !bTXClockEnabled;
         bUsed = true;
@@ -1590,7 +1595,8 @@ static bool menuTXOut( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
     // Set to true if we have used the presses etc
     bool bUsed = false;
     
-    if( bCW || bCCW )
+    // Left or right toggles
+    if( bShortPressLeft || bShortPressRight )
     {
         bTXOutEnabled = !bTXOutEnabled;
         bUsed = true;
@@ -1700,6 +1706,9 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
     #define INITIAL_FREQ_CHANGE 1000000
     #define INITIAL_FREQ_POS    7
 
+    // The final changeable digit position
+    #define FINAL_FREQ_POS      13
+
     // Set to true as expecting to use the presses etc
     bool bUsed = true;
     
@@ -1711,7 +1720,7 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
     static uint32_t oldFreq, newFreq;
 
     // If just entered the menu...
-    if( !bCW && !bCCW && !bShortPress &&!bLongPress )
+    if( !bCW && !bCCW && !bShortPress &&!bLongPress && !bShortPressLeft &&!bShortPressRight )
     {
         // Start with the current xtal frequency from NVRAM
         newFreq = oldFreq = nvramReadXtalFreq();
@@ -1757,24 +1766,35 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
     }
     else
     {
-        // If a long press then we are ending - need to see if we should
-        // write new value to NVRAM
+        // If a long press then we are ending without
+        // writing new value to NVRAM
         if( bLongPress )
         {
-            // Either way we don't want the cursor any more
+            // Don't want the cursor any more
             displayCursor( 0, 0, cursorOff );
 
-            // Has the frequency changed
-            if( newFreq == oldFreq )
-            {
-                // No, so just exit the menu
-                bUsed = false;
-            }
-            else
+            // Set back the original frequency
+            oscSetXtalFrequency( nvramReadXtalFreq() );
+
+            // Retune to use the xtal frequency
+            setFrequencies();
+
+            // This ensures the long press is processed to quit
+            bUsed = false;
+        }
+        // If a short press then we are ending - need to see if we should
+        // write new value to NVRAM
+        else if( bShortPress )
+        {
+            // Has the frequency changed?
+            if( newFreq != oldFreq )
             {
                 // Yes, so see if user wants to save
                 bAskToSaveXtalFreq = true;
-            
+                
+                // Don't want the cursor any more
+                displayCursor( 0, 0, cursorOff );
+
                 displayText( MENU_LINE, "Short press to save", true );
             }
         }
@@ -1800,8 +1820,8 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
                 }
             }
 
-            // A short press changes the rate we tune at
-            if( bShortPress )
+            // A short left or right press changes the rate we tune at
+            if( bShortPressRight )
             {
                 if( freqChange == 1 )
                 {
@@ -1815,6 +1835,25 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
                     // Now changing the next digit
                     freqChange /= 10;
                     xtalFreqPos++;
+                }
+
+                // Set the cursor to the correct position for the current amount of change
+                displayCursor( xtalFreqPos, MENU_LINE, cursorUnderline );
+            }
+            else if( bShortPressLeft )
+            {
+                if( freqChange == INITIAL_FREQ_CHANGE )
+                {
+                    // Currently at the highest position so start at the bottom
+                    // again
+                    freqChange = 1;
+                    xtalFreqPos = FINAL_FREQ_POS;
+                }
+                else
+                {
+                    // Now changing the next digit
+                    freqChange *= 10;
+                    xtalFreqPos--;
                 }
 
                 // Set the cursor to the correct position for the current amount of change
@@ -1855,8 +1894,8 @@ static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPres
         keyerMode = morseGetKeyerMode();
     }
 
-    // Handle clockwise and counter-clockwise rotation of the control
-    if( bCW )
+    // Left or right button presses
+    if( bShortPressRight )
     {
         keyerMode++;
         if( keyerMode == MORSE_NUM_KEYER_MODES)
@@ -1864,7 +1903,7 @@ static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPres
             keyerMode = 0;
         }
     }
-    else if( bCCW )
+    else if( bShortPressLeft )
     {
         if( keyerMode == 0 )
         {
