@@ -367,33 +367,43 @@ typedef uint8_t bool;
 
 #define RELAY_STATE_160M   0
 #define TX_ENABLED_160M    false
+#define QUICK_VFO_160M     false
 
 #define RELAY_STATE_80M    0
 #define TX_ENABLED_80M     true
+#define QUICK_VFO_80M      true
 
 #define RELAY_STATE_60M    3
 #define TX_ENABLED_60M     true
+#define QUICK_VFO_60M      true
 
 #define RELAY_STATE_40M    1
 #define TX_ENABLED_40M     true
+#define QUICK_VFO_40M      true
 
 #define RELAY_STATE_30M    2
 #define TX_ENABLED_30M     true
+#define QUICK_VFO_30M      true
 
 #define RELAY_STATE_20M    4
 #define TX_ENABLED_20M     true
+#define QUICK_VFO_20M      true
 
 #define RELAY_STATE_17M    4
 #define TX_ENABLED_17M     false
+#define QUICK_VFO_17M      false
 
 #define RELAY_STATE_15M    4
 #define TX_ENABLED_15M     false
+#define QUICK_VFO_15M      false
 
 #define RELAY_STATE_12M    4
 #define TX_ENABLED_12M     false
+#define QUICK_VFO_12M      false
 
 #define RELAY_STATE_10M    4
 #define TX_ENABLED_10M     false
+#define QUICK_VFO_10M      false
 
 #endif
 

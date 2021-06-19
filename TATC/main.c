@@ -176,31 +176,29 @@ static const struct
 #endif
     bool      bTXEnabled;   // True if TX enabled on this band
     uint8_t   relayState;   // What state to put the relays in on this band
+#ifndef SOTA2
+    bool      bQuickVFOMenu;// True if this band appears in the quick VFO menu
+#endif
 }
 band[NUM_BANDS] =
 {
 #ifdef SOTA2
-#if 1
-    { "40m",     7000000,  7199999,  7030000,   7020000,  7040000, TX_ENABLED_40M,  RELAY_STATE_40M },
-    { "20m",    14000000, 14349999, 14060000,  14050000, 14070000, TX_ENABLED_20M,  RELAY_STATE_20M },
+    { "40m",      7000000,  7199999,  7030000,   7020000,  7040000, TX_ENABLED_40M,  RELAY_STATE_40M },
+    { "20m",     14000000, 14349999, 14060000,  14050000, 14070000, TX_ENABLED_20M,  RELAY_STATE_20M },
 #else
-    { "RWM",     4996000,  4996000,  4996000,   4996000,  4996000, false,           RELAY_STATE_40M },
-    { "RWM",     9996000,  9996000,  9996000,   9996000,  9996000, false,           RELAY_STATE_20M },
-#endif
-#else
-    { "160m",    1810000,  1999999,  1836000, TX_ENABLED_160M, RELAY_STATE_160M },
-    { "80m",     3500000,  3799999,  3560000, TX_ENABLED_80M,  RELAY_STATE_80M },
-    { "RWM",     4996000,  4996000,  4996000, false,           RELAY_STATE_60M },
-    { "60m UK",  5258500,  5263999,  5262000, TX_ENABLED_60M,  RELAY_STATE_60M },
-    { "60m EU",  5354000,  5357999,  5355000, TX_ENABLED_60M,  RELAY_STATE_60M },
-    { "40m",     7000000,  7199999,  7030000, TX_ENABLED_40M,  RELAY_STATE_40M },
-    { "RWM",     9996000,  9996000,  9996000, false,           RELAY_STATE_30M },
-    { "30m",    10100000, 10150000, 10116000, TX_ENABLED_30M,  RELAY_STATE_30M },
-    { "20m",    14000000, 14349999, 14060000, TX_ENABLED_20M,  RELAY_STATE_20M },
-    { "17m",    18068000, 18167999, 18086000, TX_ENABLED_17M,  RELAY_STATE_17M },
-    { "15m",    21000000, 21449999, 21060000, TX_ENABLED_15M,  RELAY_STATE_15M },
-    { "12m",    24890000, 24989999, 24906000, TX_ENABLED_12M,  RELAY_STATE_12M },
-    { "10m",    28000000, 29699999, 28060000, TX_ENABLED_10M,  RELAY_STATE_10M },
+    { "160m",     1810000,  1999999,  1836000, TX_ENABLED_160M, RELAY_STATE_160M, QUICK_VFO_160M },
+    { "80m",      3500000,  3799999,  3560000, TX_ENABLED_80M,  RELAY_STATE_80M,  QUICK_VFO_80M },
+    { "RWM 4996", 4996000,  4996000,  4996000, false,           RELAY_STATE_60M,  false },
+    { "60m UK",   5258500,  5263999,  5262000, TX_ENABLED_60M,  RELAY_STATE_60M,  QUICK_VFO_60M },
+    { "60m EU",   5354000,  5357999,  5355000, TX_ENABLED_60M,  RELAY_STATE_60M,  QUICK_VFO_60M },
+    { "40m",      7000000,  7199999,  7030000, TX_ENABLED_40M,  RELAY_STATE_40M,  QUICK_VFO_40M },
+    { "RWM 9996", 9996000,  9996000,  9996000, false,           RELAY_STATE_30M,  false },
+    { "30m",     10100000, 10150000, 10116000, TX_ENABLED_30M,  RELAY_STATE_30M,  QUICK_VFO_30M },
+    { "20m",     14000000, 14349999, 14060000, TX_ENABLED_20M,  RELAY_STATE_20M,  QUICK_VFO_20M },
+    { "17m",     18068000, 18167999, 18086000, TX_ENABLED_17M,  RELAY_STATE_17M,  QUICK_VFO_17M },
+    { "15m",     21000000, 21449999, 21060000, TX_ENABLED_15M,  RELAY_STATE_15M,  QUICK_VFO_15M },
+    { "12m",     24890000, 24989999, 24906000, TX_ENABLED_12M,  RELAY_STATE_12M,  QUICK_VFO_12M },
+    { "10m",     28000000, 29699999, 28060000, TX_ENABLED_10M,  RELAY_STATE_10M,  QUICK_VFO_10M },
 #endif
 };
 
@@ -1279,6 +1277,44 @@ static void rotaryQuickMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPr
     }
 }
 
+// Returns the next band. Allows for skipping bands that do not appear in
+// the quick VFO menu.
+//
+// oldBand      The previous band
+// direction    +1 to go up a band or -1 to go down a band
+// bAllBands    true if all bands in the table are allowed
+//              false means we will skip bands that are not to appear in the
+//              quick VFO menu
+static uint8_t nextBand( uint8_t oldBand, int8_t direction, bool bAllBands )
+{
+    // The new band starts with the old band - signed as may try to go back from 0
+    int8_t newBand = oldBand;
+
+    // We keep looping until we find a band we want to appear
+    for(;;)
+    {
+        newBand += direction;
+
+        if( newBand >= NUM_BANDS )
+        {
+            newBand = 0;
+        }
+        else if( newBand < 0 )
+        {
+            newBand = NUM_BANDS - 1;
+        }
+
+        // If all bands are valid then can stop looping
+        // otherwise only stop if the band is meant to appear
+        if( bAllBands || band[newBand].bQuickVFOMenu )
+        {
+            break;
+        }
+    }
+
+    return newBand;
+}
+
 // Handle the menu for the VFO band
 static bool menuVFOBand( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
@@ -1297,20 +1333,12 @@ static bool menuVFOBand( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
     // Right and left buttons change band
     if( bShortPressRight )
     {
-        // Don't go beyond the last band
-        if( newBand < (NUM_BANDS-1) )
-        {
-            newBand++;
-        }
+        newBand = nextBand( newBand, +1, !bInQuickVFOMenu );
         bUsed = true;
     }
     else if( bShortPressLeft )
     {
-        // Don't go before the first band
-        if( newBand > 0 )
-        {
-            newBand--;
-        }
+        newBand = nextBand( newBand, -1, !bInQuickVFOMenu );
         bUsed = true;
     }
 
