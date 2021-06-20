@@ -2297,8 +2297,8 @@ static void rotaryWpm( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
     {
         enterMenu();
     }
-    // A right press puts us back to VFO mode
-    else if( bShortPressRight )
+    // A right press (short or long) puts us back to VFO mode
+    else if( bShortPressRight || bLongPressRight )
     {
         enterVFOMode();
     }
