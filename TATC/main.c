@@ -117,8 +117,9 @@ static bool bInQuickVFOMenu;
 
 // Text for the quick menu line
 // In split mode cannot enter RIT or XIT so show them in lower case
+// Also show we are in split mode
 #define QUICK_MENU_TEXT         "A/B A=B R X SPLT"
-#define QUICK_MENU_SPLIT_TEXT   "A/B A=B r x SPLT"
+#define QUICK_MENU_SPLIT_TEXT   "A/B A=B r x splt"
 
 // Quick menu array
 struct sQuickMenuItem
@@ -266,6 +267,8 @@ static uint8_t cursorIndex;
 #define VFO_SPEED_UP_DIFF  150  // If dial clicks are no more than this ms apart then speed up
 #define VFO_SPEED_UP_FACTOR 10  // Multiply the rate by this
 #endif
+
+static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 
 // Maintain transmit and receive frequencies for two VFOs
 // The current VFO
@@ -916,7 +919,6 @@ void vfoSwap()
 static void quickMenuSwap()
 {
     vfoSwap();
-    enterVFOMode();
 }
 
 // Set the other VFO to the current VFO - called either from the quick menu or CAT control
@@ -935,7 +937,6 @@ void vfoEqual()
 static void quickMenuEqual()
 {
     vfoEqual();
-    enterVFOMode();
 }
 
 // Set RIT on or off - called from quick menu or CAT control
@@ -1227,7 +1228,12 @@ static void enterSimplex()
 // Handle the rotary control while in the quick menu
 static void rotaryQuickMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
-    if( bShortPressRight )
+    // Rotary movement continues to operate the VFO
+    if( bCW || bCCW )
+    {
+        rotaryVFO(bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight);
+    }
+    else if( bShortPressRight )
     {
         if( quickMenuItem == (NUM_QUICK_MENUS-1))
         {
