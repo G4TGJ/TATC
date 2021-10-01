@@ -39,6 +39,7 @@ static bool menuTXDelay( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
 static bool menuTXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 static bool menuTXOut( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuBFOFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 
 // Menu structure arrays
@@ -72,11 +73,12 @@ static const struct sMenuItem testMenu[NUM_TEST_MENUS] =
     { "TX Out",         menuTXOut },
 };
 
-#define NUM_CONFIG_MENUS 3
+#define NUM_CONFIG_MENUS 4
 static const struct sMenuItem configMenu[NUM_CONFIG_MENUS] =
 {
     { "",               NULL },
     { "Xtal Frequency", menuXtalFreq },
+    { "BFO Frequency",  menuBFOFreq },
     { "Keyer Mode",     menuKeyerMode },
 };
 
@@ -214,11 +216,11 @@ static uint8_t currentRelay;
 static bool bVFOFirstLine = true;
 
 
-// For the xtal frequency the current digit position that is changing
-static uint8_t xtalFreqPos;
+// For the setting frequency (e.g. xtal or BFO) the current digit position that is changing
+static uint8_t settingFreqPos;
 
-// True if asking whether to save the xtal frequency setting
-static bool bAskToSaveXtalFreq = false;
+// True if asking whether to save the frequency setting
+static bool bAskToSaveSettingFreq = false;
 
 #endif
 	
@@ -313,6 +315,9 @@ static uint8_t txDelay = 10;
 
 // Set to true when transmitting
 static bool bTransmitting = false;
+
+// BFO frequency - 0 for direct conversion
+static uint32_t BFOFrequency;
 
 #ifndef SOTA2
 static void update_display();
@@ -774,10 +779,19 @@ static void setRXFrequency( uint32_t freq )
         oscFreq = freq - RX_OFFSET;
     }
 
-    // Set the oscillator frequency. This will set the correct quadrature
-    // phase shift.
-    oscSetFrequency( RX_CLOCK_A, oscFreq, 0 );
-    oscSetFrequency( RX_CLOCK_B, oscFreq, bCWReverse ? 1 : -1 );
+    // Set the oscillator frequency.
+    if( BFOFrequency == 0 )
+    {
+        // Direct conversion so set the correct quadrature phase shift.
+        oscSetFrequency( RX_CLOCK_A, oscFreq, 0 );
+        oscSetFrequency( RX_CLOCK_B, oscFreq, bCWReverse ? 1 : -1 );
+    }
+    else
+    {
+        // Superhet so set the LFO and BFO
+        oscSetFrequency( RX_CLOCK_A, freq + BFOFrequency, 0 );
+        oscSetFrequency( RX_CLOCK_B, BFOFrequency + RX_OFFSET, 0 );
+    }
 
     // Set the relay
     setRelay();
@@ -1734,17 +1748,17 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
         // Start with changing the first digit
         // i.e. the tens of MHz
         freqChange = INITIAL_FREQ_CHANGE;
-        xtalFreqPos = INITIAL_FREQ_POS;
+        settingFreqPos = INITIAL_FREQ_POS;
         
         // Set the cursor on the digit to be changed
-        displayCursor( xtalFreqPos, MENU_LINE, cursorUnderline );
+        displayCursor( settingFreqPos, MENU_LINE, cursorUnderline );
 
         // We aren't asking to save the new frequency to NVRAM just yet
-        bAskToSaveXtalFreq = false;
+        bAskToSaveSettingFreq = false;
     }
 
     // We are asking whether or not to save the new value to NVRAM
-    if( bAskToSaveXtalFreq )
+    if( bAskToSaveSettingFreq )
     {
         // A long press means we are quitting without saving
         if( bLongPress )
@@ -1796,7 +1810,7 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
             if( newFreq != oldFreq )
             {
                 // Yes, so see if user wants to save
-                bAskToSaveXtalFreq = true;
+                bAskToSaveSettingFreq = true;
                 
                 // Don't want the cursor any more
                 displayCursor( 0, 0, cursorOff );
@@ -1834,17 +1848,17 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
                     // Currently at the lowest position so start at the top
                     // again
                     freqChange = INITIAL_FREQ_CHANGE;
-                    xtalFreqPos = INITIAL_FREQ_POS;
+                    settingFreqPos = INITIAL_FREQ_POS;
                 }
                 else
                 {
                     // Now changing the next digit
                     freqChange /= 10;
-                    xtalFreqPos++;
+                    settingFreqPos++;
                 }
 
                 // Set the cursor to the correct position for the current amount of change
-                displayCursor( xtalFreqPos, MENU_LINE, cursorUnderline );
+                displayCursor( settingFreqPos, MENU_LINE, cursorUnderline );
             }
             else if( bShortPressLeft )
             {
@@ -1853,17 +1867,17 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
                     // Currently at the highest position so start at the bottom
                     // again
                     freqChange = 1;
-                    xtalFreqPos = FINAL_FREQ_POS;
+                    settingFreqPos = FINAL_FREQ_POS;
                 }
                 else
                 {
                     // Now changing the next digit
                     freqChange *= 10;
-                    xtalFreqPos--;
+                    settingFreqPos--;
                 }
 
                 // Set the cursor to the correct position for the current amount of change
-                displayCursor( xtalFreqPos, MENU_LINE, cursorUnderline );
+                displayCursor( settingFreqPos, MENU_LINE, cursorUnderline );
             }
 
             // Display the current frequency
@@ -1879,6 +1893,189 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
                 
                 // Set the RX and TX frequencies again - this will pick up the
                 // new crystal frequency
+                setFrequencies();
+            }
+        }
+    }
+    return bUsed;
+}
+
+// Menu for changing the BFO frequency (0 means direct conversion receiver)
+// Each digit can be changed individually
+static bool menuBFOFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
+{
+    // When the menu is entered we are changing the first changeable digit of the
+    // BFO frequency i.e. 10MHz. This is character 5.
+    #define INITIAL_BFO_FREQ_CHANGE 10000000
+    #define INITIAL_BFO_FREQ_POS    5
+
+    // The final changeable digit position
+    #define FINAL_BFO_FREQ_POS      12
+
+    // Set to true as expecting to use the presses etc
+    bool bUsed = true;
+    
+    // The current change in frequency
+    static uint32_t freqChange;
+    
+    // The new frequency starts with the current value
+    // Will only want to update it if they have changed
+    static uint32_t oldFreq, newFreq;
+
+    // If just entered the menu...
+    if( !bCW && !bCCW && !bShortPress &&!bLongPress && !bShortPressLeft &&!bShortPressRight )
+    {
+        // Start with the current BFO frequency from NVRAM
+        newFreq = oldFreq = nvramReadBFOFreq();
+        
+        // Start with changing the first digit
+        // i.e. the tens of MHz
+        freqChange = INITIAL_BFO_FREQ_CHANGE;
+        settingFreqPos = INITIAL_BFO_FREQ_POS;
+        
+        // Set the cursor on the digit to be changed
+        displayCursor( settingFreqPos, MENU_LINE, cursorUnderline );
+
+        // We aren't asking to save the new frequency to NVRAM just yet
+        bAskToSaveSettingFreq = false;
+    }
+
+    // We are asking whether or not to save the new value to NVRAM
+    if( bAskToSaveSettingFreq )
+    {
+        // A long press means we are quitting without saving
+        if( bLongPress )
+        {
+            // Set back the original frequency
+            BFOFrequency = nvramReadBFOFreq();
+
+            // Retune to use the BFO frequency
+            setFrequencies();
+
+            bUsed = false;
+        }
+        // A short press means we are writing the new frequency
+        // and quitting
+        else if( bShortPress )
+        {
+            // Write the new BFO frequency to NVRAM
+            nvramWriteBFOFreq( newFreq );
+            
+            // Take us out of the menu item
+            enterVFOMode();
+
+            bUsed = false;
+        }
+    }
+    else
+    {
+        // If a long press then we are ending without
+        // writing new value to NVRAM
+        if( bLongPress )
+        {
+            // Don't want the cursor any more
+            displayCursor( 0, 0, cursorOff );
+
+            // Set back the original frequency
+            BFOFrequency = nvramReadBFOFreq();
+
+            // Retune to use the BFO frequency
+            setFrequencies();
+
+            // This ensures the long press is processed to quit
+            bUsed = false;
+        }
+        // If a short press then we are ending - need to see if we should
+        // write new value to NVRAM
+        else if( bShortPress )
+        {
+            // Has the frequency changed?
+            if( newFreq != oldFreq )
+            {
+                // Yes, so see if user wants to save
+                bAskToSaveSettingFreq = true;
+                
+                // Don't want the cursor any more
+                displayCursor( 0, 0, cursorOff );
+
+                displayText( MENU_LINE, "Short press to save", true );
+            }
+        }
+        else
+        {
+            // Rotation is a change up or down in frequency
+            if( bCW )
+            {
+                // Clock wise so increasing in frequency provided we aren't
+                // going to go over the maximum
+                if( newFreq <= (MAX_BFO_FREQUENCY - freqChange) )
+                {
+                    newFreq += freqChange;
+                }
+            }
+            else if( bCCW )
+            {
+                // Counter clockwise so decreasing in frequency provided we
+                // aren't going to go under the minimum
+                if( newFreq >= (MIN_BFO_FREQUENCY + freqChange) )
+                {
+                    newFreq -= freqChange;
+                }
+            }
+
+            // A short left or right press changes the rate we tune at
+            if( bShortPressRight )
+            {
+                if( freqChange == 1 )
+                {
+                    // Currently at the lowest position so start at the top
+                    // again
+                    freqChange = INITIAL_BFO_FREQ_CHANGE;
+                    settingFreqPos = INITIAL_BFO_FREQ_POS;
+                }
+                else
+                {
+                    // Now changing the next digit
+                    freqChange /= 10;
+                    settingFreqPos++;
+                }
+
+                // Set the cursor to the correct position for the current amount of change
+                displayCursor( settingFreqPos, MENU_LINE, cursorUnderline );
+            }
+            else if( bShortPressLeft )
+            {
+                if( freqChange == INITIAL_BFO_FREQ_CHANGE )
+                {
+                    // Currently at the highest position so start at the bottom
+                    // again
+                    freqChange = 1;
+                    settingFreqPos = FINAL_BFO_FREQ_POS;
+                }
+                else
+                {
+                    // Now changing the next digit
+                    freqChange *= 10;
+                    settingFreqPos--;
+                }
+
+                // Set the cursor to the correct position for the current amount of change
+                displayCursor( settingFreqPos, MENU_LINE, cursorUnderline );
+            }
+
+            // Display the current frequency
+            char buf[TEXT_BUF_LEN];
+            sprintf( buf, "BFO: %08lu", newFreq);
+            displayText( MENU_LINE, buf, true );
+
+            // If the frequency is to change...
+            if( newFreq != oldFreq )
+            {
+                // Set it in the oscillator driver
+                BFOFrequency = newFreq;
+                
+                // Set the RX and TX frequencies again - this will pick up the
+                // new BFO frequency
                 setFrequencies();
             }
         }
@@ -2443,6 +2640,9 @@ int main(void)
 
     // Load the crystal frequency from NVRAM
     oscSetXtalFrequency( nvramReadXtalFreq() );
+
+    // Get the BFO frequency from NVRAM
+    BFOFrequency = nvramReadBFOFreq();
 
     // Set the band from the NVRAM
     // This also updates the display with frequency and wpm.

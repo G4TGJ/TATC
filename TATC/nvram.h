@@ -20,6 +20,9 @@ void nvramWriteWpm( uint8_t wpm );
 uint32_t nvramReadXtalFreq();
 void nvramWriteXtalFreq( uint32_t freq );
 
+uint32_t nvramReadBFOFreq();
+void nvramWriteBFOFreq( uint32_t freq );
+
 enum eMorseKeyerMode nvramReadMorseKeyerMode();
 void nvramWriteMorseKeyerMode( enum eMorseKeyerMode );
 
