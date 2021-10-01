@@ -194,6 +194,12 @@ typedef uint8_t bool;
 
 #define I2C_CLOCK_RATE 100000
 
+// Default, min and max BFO frequency
+// 0 means direct conversion
+#define DEFAULT_BFO_FREQ	0UL
+#define MIN_BFO_FREQUENCY	0UL
+#define MAX_BFO_FREQUENCY	99999999UL
+
 // Define to use the alternative pins (PA1, PA2) instead
 // of the standard pins (PB2,PB3)
 #define SERIAL_ALTERNATIVE_PINS
