@@ -329,7 +329,7 @@ static bool bSidetone = true;
 
 // Delay before muting and unmuting
 static uint8_t muteDelay = 5;
-static uint8_t unmuteDelay = 5;
+static uint16_t unmuteDelay = 5;
 static uint8_t txDelay = 10;
 
 // Set to true when transmitting
@@ -1963,8 +1963,8 @@ static bool menuBFOFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
     // If just entered the menu...
     if( !bCW && !bCCW && !bShortPress &&!bLongPress && !bShortPressLeft &&!bShortPressRight )
     {
-        // Start with the current BFO frequency from NVRAM
-        newFreq = oldFreq = nvramReadBFOFreq();
+        // Start with the current BFO frequency
+        newFreq = oldFreq = BFOFrequency;
         
         // Start with changing the first digit
         // i.e. the tens of MHz
@@ -2107,7 +2107,7 @@ static bool menuBFOFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
             displayText( MENU_LINE, buf, true );
 
             // If the frequency is to change...
-            if( newFreq != oldFreq )
+            if( newFreq != BFOFrequency )
             {
                 // Set it in the oscillator driver
                 BFOFrequency = newFreq;
