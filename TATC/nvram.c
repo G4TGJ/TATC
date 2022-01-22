@@ -38,7 +38,7 @@
 // For example:
 // T2S 27000123 A 18
 //
-// If the format is incorrect or the slow and fast speeds are outside
+// If the format is incorrect or the speed is outside
 // the min and max limits defined in config.h then the default values
 // from config.h are used.
 
