@@ -1,6 +1,28 @@
 # TATC
 Software for the [G4TGJ 5 Band CW QRP Transceiver](https://g4tgj.github.io/5-Band-CW-QRP-Transceiver/) and the [Two Band CW QRP SOTA Transceiver](https://g4tgj.github.io/Two-Band-CW-QRP-SOTA-Transceiver/).
 
+## Configuration ##
+
+The crystal frequency and morse keyer parameters are set by programming the ATtiny's EEPROM.
+
+Data format:
+
+    T2S ffffffff x yy
+
+    Always starts with T2S
+
+    ffffffff is the xtal frequency
+    x is A for Iambic A, B for Iambic B, U for Ultimatic or S for straight key
+    yy is the morse speed in wpm (ignored in straight key mode)
+
+For example:
+
+    T2S 27000123 A 18
+
+If the format is incorrect or the speed is outside
+the min (5wpm) and max (40wpm) limits defined in config.h then the default values
+from config.h are used.
+
 ## Building the sofware
 
 To compile from source you will need this repo and [TARL](https://github.com/G4TGJ/TARL).
