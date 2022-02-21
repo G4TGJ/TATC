@@ -213,6 +213,7 @@ static struct
     enum eMorseKeyerMode morse_keyer_mode;  // Morse keyer mode
     uint8_t band;                           // Frequency band
     bool bCWReverse;                        // True if in CW-Reverse
+    enum eBacklightMode backlight_mode;     // Backlight mode
     uint16_t crc;                           // CRC to check that the data is valid
 } nvram_cache;
 
@@ -271,6 +272,7 @@ void nvramInit()
         nvram_cache.band = DEFAULT_BAND;
         nvram_cache.bCWReverse = DEFAULT_CWREVERSE;
         nvram_cache.magic = MAGIC;
+        nvram_cache.backlight_mode = DEFAULT_BACKLIGHT_MODE;
         
         // Calculate the CRC and write to the EEPROM
         nvramUpdate();
@@ -332,6 +334,17 @@ uint8_t nvramReadCWReverse()
 void nvramWriteCWReverse( bool bCWReverse )
 {
     nvram_cache.bCWReverse = bCWReverse;
+    nvramUpdate();
+}
+
+enum eBacklightMode nvramReadBacklighMode()
+{
+    return nvram_cache.backlight_mode;
+}
+
+void nvramWriteBacklightMode( enum eBacklightMode backlight_mode )
+{
+    nvram_cache.backlight_mode = backlight_mode;
     nvramUpdate();
 }
 

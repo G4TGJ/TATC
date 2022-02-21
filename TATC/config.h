@@ -349,6 +349,12 @@ typedef uint8_t bool;
 
 #define ENABLE_DISPLAY_SPLIT_LINE
 
+// The default backlight mode
+#define DEFAULT_BACKLIGHT_MODE  backlightOn
+
+// In auto backlight mode how long to delay before turning off the backlight
+#define BACKLIGHT_AUTO_DELAY    5000
+
 // For each band, what state should the LPF/PA relay be in
 // and is TX allowed on the band
 

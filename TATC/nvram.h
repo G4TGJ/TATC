@@ -12,6 +12,15 @@
 #include <inttypes.h>
 #include "morse.h"
 
+// Backlight mode
+enum eBacklightMode
+{
+    backlightOff = 0,
+    backlightOn,
+    backlightAuto,
+    NUM_BACKLIGHT_MODES
+};
+
 void nvramInit();
 
 uint8_t nvramReadWpm();
@@ -28,5 +37,8 @@ void nvramWriteBand( uint8_t band );
 
 uint8_t nvramReadCWReverse();
 void nvramWriteCWReverse( bool bCWReverse );
+
+enum eBacklightMode nvramReadBacklighMode();
+void nvramWriteBacklightMode( enum eBacklightMode );
 
 #endif //NVRAM_H

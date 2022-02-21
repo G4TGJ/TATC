@@ -20,6 +20,7 @@
 #include "millis.h"
 #include "nvram.h"
 #include "display.h"
+#include "lcd.h"
 #include "morse.h"
 #include "cat.h"
 #include "rotary.h"
@@ -40,6 +41,7 @@ static bool menuTXClock( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
 static bool menuTXOut( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+static bool menuBacklight( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 
 // Menu structure arrays
 
@@ -72,12 +74,13 @@ static const struct sMenuItem testMenu[NUM_TEST_MENUS] =
     { "TX Out",         menuTXOut },
 };
 
-#define NUM_CONFIG_MENUS 3
+#define NUM_CONFIG_MENUS 4
 static const struct sMenuItem configMenu[NUM_CONFIG_MENUS] =
 {
     { "",               NULL },
     { "Xtal Frequency", menuXtalFreq },
     { "Keyer Mode",     menuKeyerMode },
+    { "Backlight",      menuBacklight },
 };
 
 enum eMenuTopLevel
@@ -156,6 +159,13 @@ static enum eCurrentMode
     modeWpm,
     modeQuickMenu,
 } currentMode = modeVFO;
+
+// Backlight mode
+static enum eBacklightMode currentBacklightMode;
+
+// The last time the backlight went on in auto mode
+static uint32_t lastBacklightTime;
+
 #endif
 
 // Band frequencies
@@ -1726,7 +1736,7 @@ static bool menuXtalFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress
     static uint32_t oldFreq, newFreq;
 
     // If just entered the menu...
-    if( !bCW && !bCCW && !bShortPress &&!bLongPress && !bShortPressLeft &&!bShortPressRight )
+    if( !bCW && !bCCW && !bShortPress &&!bLongPress && !bShortPressLeft && !bShortPressRight )
     {
         // Start with the current xtal frequency from NVRAM
         newFreq = oldFreq = nvramReadXtalFreq();
@@ -1895,7 +1905,7 @@ static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPres
     static enum eMorseKeyerMode keyerMode;
     
     // If just entered the menu get the current mode
-    if( !bCW && !bCCW && !bShortPress &&!bLongPress )
+    if( !bCW && !bCCW && !bShortPress &&!bLongPress && !bShortPressLeft && !bShortPressRight )
     {
         keyerMode = morseGetKeyerMode();
     }
@@ -1944,6 +1954,90 @@ static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPres
 
         // Also write to NVRAM
         nvramWriteMorseKeyerMode( keyerMode );
+        
+        // Leave the menu and go back to VFO mode
+        enterVFOMode();
+    }
+
+    return bUsed;
+}
+
+static bool menuBacklight( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
+{
+    // Set to true if we have used the presses etc
+    bool bUsed = false;
+    
+    // Current backlight mode
+    static enum eBacklightMode backlightMode;
+    
+    // If just entered the menu get the current mode
+    if( !bCW && !bCCW && !bShortPress &&!bLongPress && !bShortPressLeft && !bShortPressRight )
+    {
+        backlightMode = currentBacklightMode;
+    }
+
+    // Left or right button presses
+    if( bShortPressRight )
+    {
+        backlightMode++;
+        if( backlightMode == NUM_BACKLIGHT_MODES)
+        {
+            backlightMode = 0;
+        }
+    }
+    else if( bShortPressLeft )
+    {
+        if( backlightMode == 0 )
+        {
+            backlightMode = NUM_BACKLIGHT_MODES - 1;
+        }
+        else
+        {
+            backlightMode--;
+        }
+    }
+
+    switch( backlightMode )
+    {
+        case backlightOff:
+            displayText( MENU_LINE, "Backlight: Off", true );
+            break;
+
+        case backlightOn:
+            displayText( MENU_LINE, "Backlight: On", true );
+            break;
+
+        case backlightAuto:
+        default:
+            displayText( MENU_LINE, "Backlight: Auto", true );
+            break;
+    }
+
+    if( bShortPress )
+    {
+        // Short press writes the new mode
+        currentBacklightMode = backlightMode;
+
+        // Action the new mode
+        switch( backlightMode )
+        {
+            case backlightOff:
+                lcdBacklight(false);
+                break;
+
+            case backlightOn:
+                lcdBacklight(true);
+                break;
+
+            case backlightAuto:
+            default:
+                lcdBacklight(true);
+                lastBacklightTime = millis();
+                break;
+        }
+
+        // Also write to NVRAM
+        nvramWriteBacklightMode( currentBacklightMode );
         
         // Leave the menu and go back to VFO mode
         enterVFOMode();
@@ -2366,6 +2460,13 @@ static void handleRotary()
 #ifdef SOTA2
         rotaryVFO(bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight);
 #else
+        // If we have an auto backlight then turn it on and note the time
+        if( currentBacklightMode == backlightAuto )
+        {
+            lcdBacklight( true );
+            lastBacklightTime = millis();
+        }
+
         switch( currentMode )
         {
             case modeMenu:
@@ -2394,6 +2495,20 @@ static void handleRotary()
 // Main loop is called repeatedly
 static void loop()
 {
+    // If the backlight mode is auto then see if it is time
+    // to turn off the backlight
+    if( currentBacklightMode == backlightAuto )
+    {
+        if( lastBacklightTime &&
+            (millis() - lastBacklightTime) > BACKLIGHT_AUTO_DELAY )
+        {
+            lcdBacklight( false );
+
+            // Setting this to zero stops us checking any more
+            lastBacklightTime = 0;
+        }
+    }
+
     // See if the morse paddles or straight key have been pressed
     // If not active then deal with other things too
 	if( !morseScanPaddles() )
@@ -2436,6 +2551,14 @@ int main(void)
 
 #ifndef SOTA2
     displayInit();
+
+    // Set the backlight
+    currentBacklightMode = nvramReadBacklighMode();
+    lcdBacklight( currentBacklightMode != backlightOff );
+    if( currentBacklightMode == backlightAuto )
+    {
+        lastBacklightTime = millis();
+    }
 #endif
    
     // Initialise the oscillator chip
