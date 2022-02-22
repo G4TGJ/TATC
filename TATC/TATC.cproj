@@ -45,7 +45,7 @@
     </com_atmel_avrdbg_tool_medbg>
     <avrtoolinterfaceclock>100000</avrtoolinterfaceclock>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+  <PropertyGroup Condition=" '$(Configuration)' == '5Band' ">
     <ToolchainSettings>
       <AvrGcc>
         <avrgcc.common.Device>-mmcu=attiny3216 -B "%24(PackRepoDir)\Atmel\ATtiny_DFP\1.5.315\gcc\dev\attiny3216"</avrgcc.common.Device>
@@ -86,7 +86,7 @@
       </AvrGcc>
     </ToolchainSettings>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Sota2' ">
     <ToolchainSettings>
       <AvrGcc>
         <avrgcc.common.Device>-mmcu=attiny3216 -B "%24(PackRepoDir)\Atmel\ATtiny_DFP\1.5.315\gcc\dev\attiny3216"</avrgcc.common.Device>
@@ -99,7 +99,8 @@
         <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
         <avrgcc.compiler.symbols.DefSymbols>
           <ListValues>
-            <Value>DEBUG</Value>
+            <Value>NDEBUG</Value>
+            <Value>SOTA2</Value>
           </ListValues>
         </avrgcc.compiler.symbols.DefSymbols>
         <avrgcc.compiler.directories.IncludePaths>
@@ -110,10 +111,9 @@
             <Value>%24(PackRepoDir)\Atmel\ATtiny_DFP\1.5.315\include</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
-        <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
+        <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
         <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
         <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
-        <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
         <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
         <avrgcc.linker.libraries.Libraries>
           <ListValues>
@@ -125,11 +125,11 @@
             <Value>%24(PackRepoDir)\Atmel\ATtiny_DFP\1.5.315\include</Value>
           </ListValues>
         </avrgcc.assembler.general.IncludePaths>
-        <avrgcc.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcc.assembler.debugging.DebugLevel>
       </AvrGcc>
     </ToolchainSettings>
+    <OutputPath>bin\Sota2\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Sota2' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'SOTA5' ">
     <ToolchainSettings>
       <AvrGcc>
   <avrgcc.common.Device>-mmcu=attiny3216 -B "%24(PackRepoDir)\Atmel\ATtiny_DFP\1.5.315\gcc\dev\attiny3216"</avrgcc.common.Device>
@@ -143,7 +143,7 @@
   <avrgcc.compiler.symbols.DefSymbols>
     <ListValues>
       <Value>NDEBUG</Value>
-      <Value>SOTA2</Value>
+      <Value>SOTA5</Value>
     </ListValues>
   </avrgcc.compiler.symbols.DefSymbols>
   <avrgcc.compiler.directories.IncludePaths>
@@ -170,7 +170,7 @@
   </avrgcc.assembler.general.IncludePaths>
 </AvrGcc>
     </ToolchainSettings>
-    <OutputPath>bin\Sota2\</OutputPath>
+    <OutputPath>bin\SOTA5\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\TARL\cat.c">

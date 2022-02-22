@@ -355,6 +355,9 @@ typedef uint8_t bool;
 // In auto backlight mode how long to delay before turning off the backlight
 #define BACKLIGHT_AUTO_DELAY    5000
 
+// As we are controlling the backlight it should start off
+#define BACKLIGHT_STARTS_OFF   
+
 // For each band, what state should the LPF/PA relay be in
 // and is TX allowed on the band
 
@@ -365,6 +368,48 @@ typedef uint8_t bool;
 
 #define RELAY_STATE_20M    1
 #define TX_ENABLED_20M     true
+
+#elif SOTA5
+
+#define RELAY_STATE_160M   0
+#define TX_ENABLED_160M    false
+#define QUICK_VFO_160M     false
+
+#define RELAY_STATE_80M    0
+#define TX_ENABLED_80M     false
+#define QUICK_VFO_80M      false
+
+#define RELAY_STATE_60M    0
+#define TX_ENABLED_60M     false
+#define QUICK_VFO_60M      false
+
+#define RELAY_STATE_40M    0
+#define TX_ENABLED_40M     true
+#define QUICK_VFO_40M      true
+
+#define RELAY_STATE_30M    1
+#define TX_ENABLED_30M     true
+#define QUICK_VFO_30M      true
+
+#define RELAY_STATE_20M    2
+#define TX_ENABLED_20M     true
+#define QUICK_VFO_20M      true
+
+#define RELAY_STATE_17M    3
+#define TX_ENABLED_17M     true
+#define QUICK_VFO_17M      true
+
+#define RELAY_STATE_15M    3
+#define TX_ENABLED_15M     true
+#define QUICK_VFO_15M      true
+
+#define RELAY_STATE_12M    3
+#define TX_ENABLED_12M     false
+#define QUICK_VFO_12M      false
+
+#define RELAY_STATE_10M    3
+#define TX_ENABLED_10M     false
+#define QUICK_VFO_10M      false
 
 #else
 

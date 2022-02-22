@@ -2495,6 +2495,7 @@ static void handleRotary()
 // Main loop is called repeatedly
 static void loop()
 {
+#ifndef SOTA2
     // If the backlight mode is auto then see if it is time
     // to turn off the backlight
     if( currentBacklightMode == backlightAuto )
@@ -2508,6 +2509,7 @@ static void loop()
             lastBacklightTime = 0;
         }
     }
+#endif
 
     // See if the morse paddles or straight key have been pressed
     // If not active then deal with other things too
