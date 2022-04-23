@@ -154,7 +154,6 @@ static uint8_t quickMenuItem;
 static enum eCurrentMode
 {
     modeVFO, // Default tuning mode
-    modeFastVFO,
     modeMenu,
     modeWpm,
     modeQuickMenu,
@@ -623,7 +622,7 @@ static void update_cursor()
     uint8_t line = FREQ_LINE;
 
     // Only update the cursor if in VFO mode
-    if( currentMode == modeVFO || currentMode == modeFastVFO )
+    if( currentMode == modeVFO )
     {
         // If split, RIT or XIT mode may need to put the cursor on the other line
         if( bVFOSplit || vfoState[currentVFO].mode != vfoSimplex )
@@ -729,17 +728,8 @@ static void update_display()
         }
     }
 
-    // Line 1 usually has the RX frequency but during transmit may show the TX frequency
-    if( !bTransmitting || bVFOSplit || (vfoState[currentVFO].mode == vfoSimplex) )
-    {
-        // If in receive mode, or split, or simplex , then first line is the receive frequency
-        freq1 = getRXFreq();
-    }
-    else
-    {
-        // If transmitting in RIT or XIT mode, first line is the transmit frequency
-        freq1 = getTXFreq();
-    }
+    // Line 1 has the RX frequency
+    freq1 = getRXFreq();
 
     // Line 1 has the frequency as determined above plus the morse WPM
     sprintf( freqText, "%c%c%5lu%c%02lu %s", cLine1A, cLine1B, freq1/1000, cDot, (freq1%1000)/10, wpmText);
@@ -748,10 +738,12 @@ static void update_display()
     // All modes other than simplex have a second line
     if( bVFOSplit || (vfoState[currentVFO].mode != vfoSimplex) )
     {
-        // Second line is split so frequency not overwritten
-        displaySplitLine( 10, FREQ_LINE + 1 );
+        displaySplitLine( 0, FREQ_LINE + 1 );
         sprintf( freqText, "%c%c%5lu%c%02lu", cLine2A, cLine2B, freq2/1000, cDot, (freq2%1000)/10);
         displayText( FREQ_LINE + 1, freqText, true );
+
+        // Second line is split so frequency not overwritten if we are displaying morse
+        displaySplitLine( 10, FREQ_LINE + 1 );
     }
     else
     {
@@ -1238,10 +1230,13 @@ static void enterSimplex()
 // Handle the rotary control while in the quick menu
 static void rotaryQuickMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
 {
-    // Rotary movement continues to operate the VFO
+    // Rotary movement continues to operate the VFO in simplex mode
     if( bCW || bCCW )
     {
-        rotaryVFO(bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight);
+        if( !bVFOSplit && vfoState[currentVFO].mode == vfoSimplex )
+        {
+            rotaryVFO(bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight);
+        }
     }
     else if( bShortPressRight )
     {
@@ -1273,8 +1268,9 @@ static void rotaryQuickMenu( bool bCW, bool bCCW, bool bShortPress, bool bLongPr
     }
     else if( bShortPress )
     {
-        // A short press calls the function for this item
+        // A short press calls the function for this item and takes us out the quick menu
         quickMenu[quickMenuItem].func();
+        enterVFOMode();
     }
     else if( bLongPress )
     {
@@ -2269,16 +2265,8 @@ static void rotaryVFO( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, b
     }
     else if( bLongPressLeft )
     {
-        if( vfoState[currentVFO].mode == vfoSimplex )
-        {
-            // A long left press takes us to the quick menu in simplex
-            enterQuickMenu();
-        }
-        else
-        {
-            // Otherwise it takes us back to simplex
-            enterSimplex();
-        }
+        // A long left press takes us to the quick menu
+        enterQuickMenu();
     }
     else if( bShortPressRight )
     {
@@ -2483,7 +2471,6 @@ static void handleRotary()
 
             default:
             case modeVFO:
-            case modeFastVFO:
                 rotaryVFO(bCW, bCCW, bShortPress, bLongPress, bShortPressLeft, bLongPressLeft, bShortPressRight, bLongPressRight);
                 break;
         }
