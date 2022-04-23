@@ -132,6 +132,31 @@ typedef uint8_t bool;
 #define LEFT_LED_OUTPUT_OUT_REG    VPORTB.OUT
 #define LEFT_LED_OUTPUT_PIN        4
 
+#elif defined(SOTA5)
+
+// The number of band relays
+#define NUM_RELAYS 5
+
+#define RELAY_0_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_0_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_0_OUTPUT_PIN         5
+
+#define RELAY_1_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_1_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_1_OUTPUT_PIN         4
+
+#define RELAY_2_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_2_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_2_OUTPUT_PIN         3
+
+#define RELAY_3_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_3_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_3_OUTPUT_PIN         2
+
+#define RELAY_4_OUTPUT_DIR_REG     VPORTC.DIR
+#define RELAY_4_OUTPUT_OUT_REG     VPORTC.OUT
+#define RELAY_4_OUTPUT_PIN         1
+
 #else
 
 // The number of band relays
@@ -369,7 +394,7 @@ typedef uint8_t bool;
 #define RELAY_STATE_20M    1
 #define TX_ENABLED_20M     true
 
-#elif SOTA5
+#elif defined(SOTA5)
 
 #define RELAY_STATE_160M   0
 #define TX_ENABLED_160M    false
