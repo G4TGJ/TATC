@@ -269,8 +269,11 @@ static const struct sCursorPos vfoCursorTransition[NUM_CURSOR_TRANSITIONS] =
     { CURSOR_TRANSITION_END, CURSOR_TRANSITION_END, CURSOR_TRANSITION_END }
 };
 
+// Start the cursor on the 250Hz position
+#define DEFAULT_CURSOR_INDEX 2
+
 // Index for the current cursor position
-static uint8_t cursorIndex;
+static uint8_t cursorIndex = DEFAULT_CURSOR_INDEX;
 
 // In fast mode, if the dial is spun the rate speeds up
 #define VFO_SPEED_UP_DIFF  150  // If dial clicks are no more than this ms apart then speed up
