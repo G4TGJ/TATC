@@ -12,3 +12,8 @@ cd ..
 ./convert.sh SOTA5
 cd SOTA5
 make all
+
+cd ..
+./convert.sh SOTA7
+cd SOTA7
+make all

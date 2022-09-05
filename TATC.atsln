@@ -10,6 +10,7 @@ Global
 		5Band|AVR = 5Band|AVR
 		Sota2|AVR = Sota2|AVR
 		SOTA5|AVR = SOTA5|AVR
+		SOTA7|AVR = SOTA7|AVR
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.5Band|AVR.ActiveCfg = 5Band|AVR
@@ -18,6 +19,8 @@ Global
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Sota2|AVR.Build.0 = Sota2|AVR
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.SOTA5|AVR.ActiveCfg = SOTA5|AVR
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.SOTA5|AVR.Build.0 = SOTA5|AVR
+		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.SOTA7|AVR.ActiveCfg = SOTA7|AVR
+		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.SOTA7|AVR.Build.0 = SOTA7|AVR
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
