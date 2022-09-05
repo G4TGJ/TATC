@@ -132,7 +132,7 @@ typedef uint8_t bool;
 #define LEFT_LED_OUTPUT_OUT_REG    VPORTB.OUT
 #define LEFT_LED_OUTPUT_PIN        4
 
-#elif defined(SOTA5)
+#elif defined(SOTA5) || defined(SOTA7)
 
 // The number of band relays
 #define NUM_RELAYS 5
