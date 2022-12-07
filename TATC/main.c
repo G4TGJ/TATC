@@ -212,6 +212,9 @@ band[NUM_BANDS] =
 #endif
 };
 
+// The 12m band has reversed CW mode
+#define BAND_12M 11
+
 // Current band - initialised from NVRAM
 static uint8_t currentBand;
 
@@ -641,6 +644,21 @@ static void update_cursor()
     }
 }
 
+// Reads the CW reverse mode from NVRAM and makes any necessary changes
+static bool getCWReverse()
+{
+    bool bCWReverse = nvramReadCWReverse();
+
+    // 12m band has CW reverse swapped
+    if( currentBand == BAND_12M )
+    {
+        bCWReverse = !bCWReverse;
+    }
+
+    return bCWReverse;
+}
+
+
 // Update the display with the frequency and morse wpm
 static void update_display()
 {
@@ -707,12 +725,10 @@ static void update_display()
     {
         if( vfoState[currentVFO].mode == vfoRIT )
         {
-            cLine1B = 'r';
             cLine2A = 'R';
         }
         else
         {
-            cLine1B = 'x';
             cLine2A = 'X';
         }
 
@@ -731,6 +747,12 @@ static void update_display()
         }
     }
 
+    // Display if we are in CW reverse mode
+    if( getCWReverse() )
+    {
+        cLine1B = '^';
+    }
+    
     // Line 1 has the RX frequency
     freq1 = getRXFreq();
 
@@ -765,7 +787,7 @@ static void setRXFrequency( uint32_t freq )
 {
     // The RX oscillator has to be offset for the CW tone to be audible
     // Decide if we are using CW normal or reverse
-    bool bCWReverse = nvramReadCWReverse();
+    bool bCWReverse = getCWReverse();
     uint32_t oscFreq;
 
     if( bCWReverse )
