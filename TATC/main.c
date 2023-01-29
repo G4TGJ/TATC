@@ -124,6 +124,9 @@ static bool bInQuickVFOMenu;
 #define QUICK_MENU_TEXT         "A/B A=B R X SPLT"
 #define QUICK_MENU_SPLIT_TEXT   "A/B A=B r x splt"
 
+// RIT item as we will start here as this is most likely to use in a rush
+#define QUICK_MENU_RIT 2
+
 // Quick menu array
 struct sQuickMenuItem
 {
@@ -148,7 +151,8 @@ static const struct sQuickMenuItem quickMenu[NUM_QUICK_MENUS] =
 };
 
 // Current quick menu item
-static uint8_t quickMenuItem;
+// Start on RIT but we will remember thereafter (until reboot)
+static uint8_t quickMenuItem = QUICK_MENU_RIT;
 
 // Current user interface mode we are in
 static enum eCurrentMode
@@ -978,6 +982,12 @@ void setCurrentVFORIT( bool bRIT )
 
             // Always on the second line in RIT mode
             bVFOFirstLine = false;
+            
+            // Start with no offset
+            setCurrentVFOOffset( 0 );
+            
+            // In RIT mode want the finest frequency control by default
+            cursorIndex = 0;
         }
         else
         {
@@ -1114,9 +1124,6 @@ static void quickMenuDisplayText()
 static void enterQuickMenu()
 {
     currentMode = modeQuickMenu;
-
-    // Start with the first item
-    quickMenuItem = 0;
 
     // Display the current menu text
     quickMenuDisplayText();
