@@ -331,11 +331,13 @@ typedef uint8_t bool;
 // I2C address
 #define SI5351A_I2C_ADDRESS 0x60
 
-// Transmit and receive clocks. Receive uses 2 clocks for quadrature.
+// Transmit and receive clocks. Direct conversion receive uses 2 clocks (0 and 1) for quadrature.
+// Superhet uses one clock for the BFO. In this case use clocks 0 and 2 so that BFO can be set
+// accurately. TX uses the third clock, the one not used for RX.
 #define NUM_CLOCKS 3
 #define RX_CLOCK_A 0
-#define RX_CLOCK_B 1
-#define TX_CLOCK   2
+#define RX_CLOCK_B (BFOFrequency == 0 ? 1 : 2)
+#define TX_CLOCK   (BFOFrequency == 0 ? 2 : 1)
 
 // The minimum and maximum crystal frequencies in the setting menu
 // Have to allow for adjusting above or below actual valid crystal range
