@@ -157,6 +157,23 @@ typedef uint8_t bool;
 #define RELAY_4_OUTPUT_OUT_REG     VPORTC.OUT
 #define RELAY_4_OUTPUT_PIN         1
 
+#elif defined(SUPERSOTA4)
+
+// The number of band relays
+#define NUM_RELAYS 3
+
+#define RELAY_0_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_0_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_0_OUTPUT_PIN         5
+
+#define RELAY_1_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_1_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_1_OUTPUT_PIN         4
+
+#define RELAY_2_OUTPUT_DIR_REG     VPORTB.DIR
+#define RELAY_2_OUTPUT_OUT_REG     VPORTB.OUT
+#define RELAY_2_OUTPUT_PIN         3
+
 #else
 
 // The number of band relays
@@ -483,6 +500,48 @@ typedef uint8_t bool;
 #define QUICK_VFO_12M      true
 
 #define RELAY_STATE_10M    4
+#define TX_ENABLED_10M     true
+#define QUICK_VFO_10M      true
+
+#elif defined(SUPERSOTA4)
+
+#define RELAY_STATE_160M   0
+#define TX_ENABLED_160M    false
+#define QUICK_VFO_160M     false
+
+#define RELAY_STATE_80M    0
+#define TX_ENABLED_80M     false
+#define QUICK_VFO_80M      false
+
+#define RELAY_STATE_60M    0
+#define TX_ENABLED_60M     false
+#define QUICK_VFO_60M      false
+
+#define RELAY_STATE_40M    0
+#define TX_ENABLED_40M     false
+#define QUICK_VFO_40M      false
+
+#define RELAY_STATE_30M    0
+#define TX_ENABLED_30M     true
+#define QUICK_VFO_30M      true
+
+#define RELAY_STATE_20M    1
+#define TX_ENABLED_20M     true
+#define QUICK_VFO_20M      true
+
+#define RELAY_STATE_17M    2
+#define TX_ENABLED_17M     false
+#define QUICK_VFO_17M      false
+
+#define RELAY_STATE_15M    2
+#define TX_ENABLED_15M     false
+#define QUICK_VFO_15M      false
+
+#define RELAY_STATE_12M    2
+#define TX_ENABLED_12M     true
+#define QUICK_VFO_12M      true
+
+#define RELAY_STATE_10M    2
 #define TX_ENABLED_10M     true
 #define QUICK_VFO_10M      true
 

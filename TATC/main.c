@@ -75,7 +75,7 @@ static const struct sMenuItem testMenu[NUM_TEST_MENUS] =
     { "TX Out",         menuTXOut },
 };
 
-#define NUM_CONFIG_MENUS 4
+#define NUM_CONFIG_MENUS 5
 static const struct sMenuItem configMenu[NUM_CONFIG_MENUS] =
 {
     { "",               NULL },
@@ -658,11 +658,13 @@ static bool getCWReverse()
 {
     bool bCWReverse = nvramReadCWReverse();
 
+#ifdef SOTA7
     // 12m band has CW reverse swapped
     if( currentBand == BAND_12M )
     {
         bCWReverse = !bCWReverse;
     }
+#endif
 
     return bCWReverse;
 }
@@ -796,7 +798,12 @@ static void setRXFrequency( uint32_t freq )
 {
     // The RX oscillator has to be offset for the CW tone to be audible
     // Decide if we are using CW normal or reverse
+#ifdef SOTA2
+    bool bCWReverse = false;
+#else
     bool bCWReverse = getCWReverse();
+#endif
+
     uint32_t oscFreq;
 
     if( bCWReverse )
@@ -2785,14 +2792,16 @@ int main(void)
     // Load the crystal frequency from NVRAM
     oscSetXtalFrequency( nvramReadXtalFreq() );
 
-    // Get the BFO frequency from NVRAM
-    BFOFrequency = nvramReadBFOFreq();
-
     // Set the band from the NVRAM
     // This also updates the display with frequency and wpm.
 #ifdef SOTA2
+    // SOTA2 is direct conversion so BFO frequency is always 0
+    BFOFrequency = 0;
     setBand( DEFAULT_BAND );
 #else
+    // Get the BFO frequency from NVRAM
+    BFOFrequency = nvramReadBFOFreq();
+
     setBand( nvramReadBand() );
 #endif
 

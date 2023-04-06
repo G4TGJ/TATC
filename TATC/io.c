@@ -100,8 +100,10 @@ void ioInit()
 #endif
 
     // Set the output pins to outputs and turn off
+#if NUM_RELAYS > 0
     RELAY_0_OUTPUT_DIR_REG |= (1 << RELAY_0_OUTPUT_PIN);
     RELAY_0_OUTPUT_OUT_REG &= ~(1 << RELAY_0_OUTPUT_PIN);
+#endif
 
 #ifdef SOTA2
     RIGHT_LED_OUTPUT_DIR_REG |= (1 << RIGHT_LED_OUTPUT_PIN);
@@ -114,17 +116,27 @@ void ioInit()
     CENTRE_LED_OUTPUT_OUT_REG &= ~(1 << CENTRE_LED_OUTPUT_PIN);
 
 #else
+
+#if NUM_RELAYS > 1
     RELAY_1_OUTPUT_DIR_REG |= (1 << RELAY_1_OUTPUT_PIN);
     RELAY_1_OUTPUT_OUT_REG &= ~(1 << RELAY_1_OUTPUT_PIN);
+#endif
 
+#if NUM_RELAYS > 2
     RELAY_2_OUTPUT_DIR_REG |= (1 << RELAY_2_OUTPUT_PIN);
     RELAY_2_OUTPUT_OUT_REG &= ~(1 << RELAY_2_OUTPUT_PIN);
+#endif
 
+#if NUM_RELAYS > 3
     RELAY_3_OUTPUT_DIR_REG |= (1 << RELAY_3_OUTPUT_PIN);
     RELAY_3_OUTPUT_OUT_REG &= ~(1 << RELAY_3_OUTPUT_PIN);
+#endif
 
+#if NUM_RELAYS > 4
     RELAY_4_OUTPUT_DIR_REG |= (1 << RELAY_4_OUTPUT_PIN);
     RELAY_4_OUTPUT_OUT_REG &= ~(1 << RELAY_4_OUTPUT_PIN);
+#endif
+
 #endif
 
     MORSE_OUTPUT_DIR_REG |= (1 << MORSE_OUTPUT_PIN);
@@ -281,11 +293,19 @@ static const struct
 }
 relayMap[NUM_RELAYS] =
 {
+#if NUM_RELAYS > 0
     { &RELAY_0_OUTPUT_OUT_REG, (1 << RELAY_0_OUTPUT_PIN) },
-#ifndef SOTA2
+#endif
+#if NUM_RELAYS > 1
     { &RELAY_1_OUTPUT_OUT_REG, (1 << RELAY_1_OUTPUT_PIN) },
+#endif
+#if NUM_RELAYS > 2
     { &RELAY_2_OUTPUT_OUT_REG, (1 << RELAY_2_OUTPUT_PIN) },
+#endif
+#if NUM_RELAYS > 3
     { &RELAY_3_OUTPUT_OUT_REG, (1 << RELAY_3_OUTPUT_PIN) },
+#endif
+#if NUM_RELAYS > 4
     { &RELAY_4_OUTPUT_OUT_REG, (1 << RELAY_4_OUTPUT_PIN) },
 #endif
 };
