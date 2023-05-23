@@ -46,4 +46,8 @@ void ioWriteCentreLED( bool bOn );
 void ioWriteLeftLED( bool bOn );
 #endif
 
+#ifdef VARIABLE_SIDETONE_VOLUME
+void ioWriteSidetoneDutyCycle( uint8_t duty );
+#endif
+
 #endif //IO_H

@@ -44,6 +44,10 @@ static bool menuBFOFreq( bool bCW, bool bCCW, bool bShortPress, bool bLongPress,
 static bool menuKeyerMode( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 static bool menuBacklight( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
 
+#ifdef VARIABLE_SIDETONE_VOLUME
+static bool menuSidetoneVolume( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight );
+#endif
+
 // Menu structure arrays
 
 struct sMenuItem
@@ -75,7 +79,12 @@ static const struct sMenuItem testMenu[NUM_TEST_MENUS] =
     { "TX Out",         menuTXOut },
 };
 
+#ifdef VARIABLE_SIDETONE_VOLUME
+#define NUM_CONFIG_MENUS 6
+#else
 #define NUM_CONFIG_MENUS 5
+#endif
+
 static const struct sMenuItem configMenu[NUM_CONFIG_MENUS] =
 {
     { "",               NULL },
@@ -83,6 +92,9 @@ static const struct sMenuItem configMenu[NUM_CONFIG_MENUS] =
     { "BFO Frequency",  menuBFOFreq },
     { "Keyer Mode",     menuKeyerMode },
     { "Backlight",      menuBacklight },
+#ifdef VARIABLE_SIDETONE_VOLUME
+    { "Sidetone vol",   menuSidetoneVolume },
+#endif
 };
 
 enum eMenuTopLevel
@@ -337,6 +349,11 @@ static bool bTransmitting = false;
 
 // BFO frequency - 0 for direct conversion
 static uint32_t BFOFrequency;
+
+#ifdef VARIABLE_SIDETONE_VOLUME
+// Volume of the sidetone - controlled via PWM duty cycle
+static uint8_t sidetoneVolume = DEFAULT_SIDETONE_PWM;
+#endif
 
 #ifndef SOTA2
 static void update_display();
@@ -2278,6 +2295,47 @@ static bool menuBacklight( bool bCW, bool bCCW, bool bShortPress, bool bLongPres
     return bUsed;
 }
 
+#ifdef VARIABLE_SIDETONE_VOLUME
+static bool menuSidetoneVolume( bool bCW, bool bCCW, bool bShortPress, bool bLongPress, bool bShortPressLeft, bool bLongPressLeft, bool bShortPressRight, bool bLongPressRight )
+{
+    // Set to true if we have used the presses etc
+    bool bUsed = false;
+    
+    if( bCW )
+    {
+        if( sidetoneVolume < MAX_SIDETONE_PWM )
+        {
+            sidetoneVolume += SIDETONE_PWM_INC;
+        }
+        bUsed = true;
+    }
+    else if( bCCW )
+    {
+        if( sidetoneVolume > MIN_SIDETONE_PWM )
+        {
+            sidetoneVolume -= SIDETONE_PWM_INC;
+        }
+        bUsed = true;
+    }
+    else if( bShortPress )
+    {
+        sidetoneVolume = DEFAULT_SIDETONE_PWM;
+        bUsed = true;
+    }
+    char buf[TEXT_BUF_LEN];
+    sprintf( buf, "Sidetone vol: %d", sidetoneVolume);
+    displayText( MENU_LINE, buf, true );
+    
+    if( bUsed )
+    {
+        ioWriteSidetoneDutyCycle( sidetoneVolume );
+        nvramWriteSidetoneVolume( sidetoneVolume );
+    }
+    
+    return bUsed;
+}
+#endif
+
 // Gets a VFO frequency - usually called from CAT control
 uint32_t getVFOFreq( uint8_t vfo )
 {
@@ -2784,6 +2842,11 @@ int main(void)
     {
         lastBacklightTime = millis();
     }
+#endif
+    
+#ifdef VARIABLE_SIDETONE_VOLUME
+    // Set the sidetone volume
+    sidetoneVolume = nvramReadSidetoneVolume();
 #endif
    
     // Initialise the oscillator chip

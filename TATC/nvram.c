@@ -215,6 +215,7 @@ static struct
     uint8_t band;                           // Frequency band
     bool bCWReverse;                        // True if in CW-Reverse
     enum eBacklightMode backlight_mode;     // Backlight mode
+    uint8_t sidetone_volume;                // Sidetone volume
     uint16_t crc;                           // CRC to check that the data is valid
 } nvram_cache;
 
@@ -275,7 +276,9 @@ void nvramInit()
         nvram_cache.bCWReverse = DEFAULT_CWREVERSE;
         nvram_cache.magic = MAGIC;
         nvram_cache.backlight_mode = DEFAULT_BACKLIGHT_MODE;
-        
+#ifdef VARIABLE_SIDETONE_VOLUME
+        nvram_cache.sidetone_volume = DEFAULT_SIDETONE_PWM;
+#endif        
         // Calculate the CRC and write to the EEPROM
         nvramUpdate();
     }
@@ -361,4 +364,17 @@ void nvramWriteBacklightMode( enum eBacklightMode backlight_mode )
     nvramUpdate();
 }
 
+#ifdef VARIABLE_SIDETONE_VOLUME
+uint8_t nvramReadSidetoneVolume()
+{
+    return nvram_cache.sidetone_volume;
+}
+
+void nvramWriteSidetoneVolume( uint8_t volume )
+{
+    nvram_cache.sidetone_volume = volume;
+    nvramUpdate();
+}
+
+#endif
 #endif

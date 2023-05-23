@@ -44,4 +44,7 @@ void nvramWriteCWReverse( bool bCWReverse );
 enum eBacklightMode nvramReadBacklighMode();
 void nvramWriteBacklightMode( enum eBacklightMode );
 
+uint8_t nvramReadSidetoneVolume();
+void nvramWriteSidetoneVolume( uint8_t volume );
+
 #endif //NVRAM_H

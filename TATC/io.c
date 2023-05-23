@@ -148,9 +148,8 @@ void ioInit()
     // Set up timer TCB1 to produce sidetone on PA3
     // We will get the clock from TCA0 (the millisecond timer) which we
     // divided down enough so that we can get an audible frequency
-#define PERIOD (F_CPU/CLOCK_DIV/CW_FREQUENCY)
-    TCB1.CCMPL = PERIOD;
-    TCB1.CCMPH = PERIOD/50;
+    TCB1.CCMPL = SIDETONE_PERIOD;
+    TCB1.CCMPH = DEFAULT_SIDETONE_PWM;
     TCB1.CTRLB = TCB_CNTMODE2_bm | TCB_CNTMODE1_bm | TCB_CNTMODE0_bm;
     TCB1.CTRLA = TCB_CLKSEL1_bm | TCB_ENABLE_bm;
     PORTA.PIN3CTRL &= PORT_PULLUPEN_bm;
@@ -158,6 +157,13 @@ void ioInit()
     /* Insert nop for synchronization*/
     _NOP();
 }
+
+#ifdef VARIABLE_SIDETONE_VOLUME
+void ioWriteSidetoneDutyCycle( uint8_t duty )
+{
+     TCB1.CCMPH = duty;   
+}
+#endif
 
 void ioReadRotary( bool *pbA, bool *pbB, bool *pbSw )
 {

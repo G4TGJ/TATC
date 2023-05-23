@@ -332,7 +332,7 @@ typedef uint8_t bool;
 #ifdef SOTA2
 #define DEFAULT_BAND 0
 #else
-#define DEFAULT_BAND 3
+#define DEFAULT_BAND 7
 #endif
 
 // By default we are not using CW-Reverse mode
@@ -370,7 +370,7 @@ typedef uint8_t bool;
 #define RX_OFFSET CW_FREQUENCY
 
 // Default, minimum and maximum morse speed in wpm
-#define DEFAULT_MORSE_WPM 18
+#define DEFAULT_MORSE_WPM 20
 #define MIN_MORSE_WPM 5
 #define MAX_MORSE_WPM 40
 
@@ -400,7 +400,11 @@ typedef uint8_t bool;
 #define ENABLE_DISPLAY_SPLIT_LINE
 
 // The default backlight mode
+#ifdef FIVEBAND
 #define DEFAULT_BACKLIGHT_MODE  backlightOn
+#else
+#define DEFAULT_BACKLIGHT_MODE  backlightAuto
+#endif
 
 // In auto backlight mode how long to delay before turning off the backlight
 #define BACKLIGHT_AUTO_DELAY    5000
@@ -605,5 +609,24 @@ typedef uint8_t bool;
 
 // Time for the rotary pushbutton to be a long press (ms)
 #define ROTARY_LONG_PRESS_TIME 250
+
+// Sidetone period
+#define SIDETONE_PERIOD (F_CPU/CLOCK_DIV/CW_FREQUENCY)
+
+// Whether or not to have variable sidetone volume
+#ifdef SUPERSOTA4
+#define VARIABLE_SIDETONE_VOLUME
+#define MIN_SIDETONE_PWM 2
+#define MAX_SIDETONE_PWM 99
+#define SIDETONE_PWM_INC 1
+
+#define DEFAULT_SIDETONE_PWM 5
+
+#else
+
+// Default sidetone volume PWM duty cycle
+#define DEFAULT_SIDETONE_PWM (SIDETONE_PERIOD/50)
+
+#endif
 
 #endif /* CONFIG_H_ */
