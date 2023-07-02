@@ -2847,6 +2847,7 @@ int main(void)
 #ifdef VARIABLE_SIDETONE_VOLUME
     // Set the sidetone volume
     sidetoneVolume = nvramReadSidetoneVolume();
+    ioWriteSidetoneDutyCycle( sidetoneVolume );
 #endif
    
     // Initialise the oscillator chip
